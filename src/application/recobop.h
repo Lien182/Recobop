@@ -8,19 +8,22 @@
 #include <string.h>
 
 struct recobop_info {
-	float saw_vin;
-	float saw_vsense;
-	float saw_power;
-	uint32_t saw_pos;
+	float saw_vin;				// +0
+	float saw_vsense;			// +4
+	float saw_power;			// +8
+	uint32_t saw_pos;			// +12
 
-	uint32_t ctrl_touch_wait;
+	uint32_t ctrl_touch_wait;	// +16
 
-	uint32_t perf_touch;
-	uint32_t perf_control;
-	uint32_t perf_inverse;
-	uint32_t perf_all;
+	uint32_t perf_touch;		// +20
+	uint32_t perf_control;		// +24
+	uint32_t perf_inverse;		// +28
+	uint32_t perf_all;			// +32
 
-	uint32_t ctrl_angle;
+	uint32_t ctrl_angle;		// +36
+
+	volatile uint32_t pTouch;			// +40
+	volatile uint32_t pServo;			// +44
 
 	int thread_count;
 	struct reconos_thread *thread_p[16];

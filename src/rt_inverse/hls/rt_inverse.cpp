@@ -47,7 +47,7 @@ THREAD_ENTRY() {
 
 		ap_uint<32> data;
 		data.range(31,0) = MBOX_GET(inverse_cmd);
-		MBOX_PUT(performance_perf, (ap_uint<8>("20", 16), ap_uint<21>(0), data(2, 0)));
+		//MBOX_PUT(performance_perf, (ap_uint<8>("20", 16), ap_uint<21>(0), data(2, 0)));
 
 		ap_uint<10> cmd_x = data(31, 22);
 		ap_uint<10> cmd_y = data(21, 12);
@@ -126,7 +126,7 @@ THREAD_ENTRY() {
 			}
 		}
 
-		MBOX_PUT(performance_perf, (ap_uint<8>("21", 16), v_s_aj_l_mina, ap_uint<10>(0), data(2, 0)));
+		//MBOX_PUT(performance_perf, (ap_uint<8>("21", 16), v_s_aj_l_mina, ap_uint<10>(0), data(2, 0)));
 		MBOX_PUT(servo_cmd, (v_s_aj_l_mina, cmd_l, ap_uint<18>(0)));
 
 #ifdef __RECONOS__

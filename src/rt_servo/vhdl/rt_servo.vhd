@@ -30,14 +30,7 @@ entity rt_servo is
 
 		HWT_Clk    : in  std_logic;
 		HWT_Rst    : in  std_logic;
-		HWT_Signal : in  std_logic;
-
-		SRV0_Out : out std_logic;
-		SRV1_Out : out std_logic;
-		SRV2_Out : out std_logic;
-		SRV3_Out : out std_logic;
-		SRV4_Out : out std_logic;
-		SRV5_Out : out std_logic
+		HWT_Signal : in  std_logic
 	);
 end entity rt_servo;
 
@@ -47,8 +40,8 @@ architecture implementation of rt_servo is
 	signal i_memif : i_memif_t;
 	signal o_memif : o_memif_t;
 
-	type STATE_TYPE is (STATE_THREAD_INIT,
-	                    STATE_CMD,STATE_STORE, STATE_PERF);
+	type STATE_TYPE is (STATE_THREAD_INIT,STATE_INIT_DATA,STATE_GET_SERVO_SINK,
+	                    STATE_CMD,STATE_STORE);
 	signal state : STATE_TYPE;
 
 	subtype C_ANGLE_RANGE is natural range 31 downto 21;
@@ -69,7 +62,10 @@ architecture implementation of rt_servo is
 
 	signal srv_count : unsigned(21 downto 0) := (others => '0');
 
-	signal ignore : std_logic_vector(31 downto 0);
+	signal ignore, ret : std_logic_vector(31 downto 0);
+	
+	signal rb_info,servo_base_addr : unsigned(31 downto 0);
+	
 begin
 	osif_setup (
 		i_osif,
@@ -113,8 +109,23 @@ begin
 				when STATE_THREAD_INIT =>
 					osif_read(i_osif, o_osif, ignore, done);
 					if done then
-						state <= STATE_CMD;
+						state <= STATE_INIT_DATA;
 					end if;
+					
+				when STATE_INIT_DATA =>
+                     osif_get_init_data(i_osif, o_osif, ret, done);
+                     if done then
+                        rb_info <= unsigned(ret);
+                        state <= STATE_GET_SERVO_SINK;
+                     end if;
+                        
+                when STATE_GET_SERVO_SINK => 
+                        memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 44), ret, done);
+                        if done then
+                             servo_base_addr <= unsigned(ret);
+                             state <= STATE_CMD;
+                        end if;
+				
 
 				when STATE_CMD =>
 					osif_mbox_get(i_osif, o_osif, servo_cmd, cmd, done);
@@ -132,60 +143,13 @@ begin
 						when "101" => srv5_a <= unsigned(cmd(C_ANGLE_RANGE));
 						when others =>
 					end case;
-
-					state <= STATE_PERF;
-
-				when STATE_PERF =>
-					osif_mbox_put(i_osif, o_osif, performance_perf, x"3100000" & "0" & cmd(C_LEG_RANGE), ignore, done);
-					if done then
-						state <= STATE_CMD;
-					end if;
-
+					
+					memif_write_word(i_memif, o_memif, std_logic_vector(servo_base_addr(31 downto 3)) & cmd(C_LEG_RANGE),  cmd(C_ANGLE_RANGE), done);
+                    if done then
+                        state <= STATE_CMD;
+                    end if;
 			end case;
 		end if;
 	end process osfsm_proc;
 
-	srv0_c <= srv0_a * 100 + C_SRV0_CAL;
-	srv1_c <= srv1_a * 100 + C_SRV1_CAL;
-	srv2_c <= srv2_a * 100 + C_SRV2_CAL;
-	srv3_c <= srv3_a * 100 + C_SRV3_CAL;
-	srv4_c <= srv4_a * 100 + C_SRV4_CAL;
-	srv5_c <= srv5_a * 100 + C_SRV5_CAL;
-
-	srv_proc: process(HWT_Clk) is
-	begin
-		if rising_edge(HWT_Clk) then
-			srv_count <= srv_count + 1;
-
-			if srv_count = 1000000 then
-				srv_count <= (others => '0');
-	--			srv0_c <= srv0_a * 100 + C_SRV0_CAL;
-	--			srv1_c <= srv1_a * 100 + C_SRV1_CAL;
-	--			srv2_c <= srv2_a * 100 + C_SRV2_CAL;
-	--			srv3_c <= srv3_a * 100 + C_SRV3_CAL;
-	--			srv4_c <= srv4_a * 100 + C_SRV4_CAL;
-	--			srv5_c <= srv5_a * 100 + C_SRV5_CAL;
-			end if;
-		end if;
-	end process srv_proc;
-
-	srv0_p <= '1' when srv_count < srv0_c else '0';
-	srv1_p <= '1' when srv_count < srv1_c else '0';
-	srv2_p <= '1' when srv_count < srv2_c else '0';
-	srv3_p <= '1' when srv_count < srv3_c else '0';
-	srv4_p <= '1' when srv_count < srv4_c else '0';
-	srv5_p <= '1' when srv_count < srv5_c else '0';
-
-	srv_out_proc: process(HWT_Clk) is
-	begin
-		if rising_edge(HWT_Clk) then
-			SRV0_Out <= srv0_p;
-			SRV1_Out <= srv1_p;
-			SRV2_Out <= srv2_p;
-			SRV3_Out <= srv3_p;
-			SRV4_Out <= srv4_p;
-			SRV5_Out <= srv5_p;
-		end if;
-	end process srv_out_proc;
-	
 end architecture;

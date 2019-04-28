@@ -78,7 +78,7 @@ void reconos_app_cleanup();
  *
  *   rt   - pointer to the ReconOS thread
  */
-struct reconos_thread *reconos_thread_create_hwt_servo();
+struct reconos_thread *reconos_thread_create_hwt_servo(void * init);
 
 
 
@@ -96,7 +96,7 @@ void reconos_thread_destroy_servo(struct reconos_thread *rt);
  *
  *   rt   - pointer to the ReconOS thread
  */
-struct reconos_thread *reconos_thread_create_hwt_touch();
+struct reconos_thread *reconos_thread_create_hwt_touch(void *init);
 
 
 

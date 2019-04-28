@@ -124,7 +124,7 @@ struct reconos_resource *resources_servo[] = {&servo_cmd_res,&performance_perf_r
 /*
  * @see header
  */
-struct reconos_thread *reconos_thread_create_hwt_servo() {
+struct reconos_thread *reconos_thread_create_hwt_servo(void * init) {
 	struct reconos_thread *rt = (struct reconos_thread *)malloc(sizeof(struct reconos_thread));
 	if (!rt) {
 		panic("[reconos-core] ERROR: failed to allocate memory for thread\n");
@@ -132,7 +132,7 @@ struct reconos_thread *reconos_thread_create_hwt_servo() {
 
 	int slots[] = {0};
 	reconos_thread_init(rt, "servo", 0);
-	reconos_thread_setinitdata(rt, 0);
+	reconos_thread_setinitdata(rt, init);
 	reconos_thread_setallowedslots(rt, slots, 1);
 	reconos_thread_setresourcepointers(rt, resources_servo, 2);
 	reconos_thread_create_auto(rt, RECONOS_THREAD_HW);
@@ -155,7 +155,7 @@ struct reconos_resource *resources_touch[] = {&touch_pos_res,&performance_perf_r
 /*
  * @see header
  */
-struct reconos_thread *reconos_thread_create_hwt_touch() {
+struct reconos_thread *reconos_thread_create_hwt_touch(void * init) {
 	struct reconos_thread *rt = (struct reconos_thread *)malloc(sizeof(struct reconos_thread));
 	if (!rt) {
 		panic("[reconos-core] ERROR: failed to allocate memory for thread\n");
@@ -163,7 +163,7 @@ struct reconos_thread *reconos_thread_create_hwt_touch() {
 
 	int slots[] = {1};
 	reconos_thread_init(rt, "touch", 0);
-	reconos_thread_setinitdata(rt, 0);
+	reconos_thread_setinitdata(rt, init);
 	reconos_thread_setallowedslots(rt, slots, 1);
 	reconos_thread_setresourcepointers(rt, resources_touch, 2);
 	reconos_thread_create_auto(rt, RECONOS_THREAD_HW);

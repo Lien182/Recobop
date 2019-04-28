@@ -37,13 +37,18 @@ THREAD_ENTRY() {
 
 	ap_fixed<22,12> error_x_diff_m[MC], error_y_diff_m[MC];
 
+
+	ap_uint<32> tmp = 1;		
+	MEM_WRITE(tmp, (uint32)(rb_info+36).range(31,0) , 4);
+
+
 	while (1) {
 
 		ap_uint<32> pos;
 		pos.range(31,0) = MBOX_GET(touch_pos);
 		ap_uint<32> wait;
-		wait.range(31,0) = MBOX_GET(touch_pos);
-		MBOX_PUT(performance_perf, (ap_uint<8>("10", 16), ap_uint<24>(0)));
+		wait.range(31,0) =  100000;   //MBOX_GET(touch_pos);
+		//MBOX_PUT(performance_perf, (ap_uint<8>("10", 16), ap_uint<24>(0)));
 
 		ap_uint<12> pos_x = pos(23, 12);
 		ap_uint<12> pos_y = pos(11, 0);
@@ -120,17 +125,16 @@ THREAD_ENTRY() {
 		ap_uint<9> cmd_a = len;
 
 
-		MBOX_PUT(performance_perf, (ap_uint<8>("11", 16), ap_uint<24>(0)));
+		//MBOX_PUT(performance_perf, (ap_uint<8>("11", 16), ap_uint<24>(0)));
 		for (int i = 0; i < 6; i++) {
 			MBOX_PUT(inverse_cmd, (cmd_x, cmd_y, cmd_a, (ap_uint<3>)i));
 		}
 
 		// saw
-		ap_uint<32> saw[1] = { len };
-		uint32 tmp = saw[0].range(31,0);
-		rb_info += 36;
+		//ap_uint<32> saw[1] = { len };
+		//uint32 tmp = saw[0].range(31,0);
+		//rb_info += 36;
 
-		MEM_WRITE(saw, (uint32)rb_info.range(31,0) , 4);
 
 	}
 }

@@ -56,7 +56,7 @@ THREAD_ENTRY() {
 
 	while (1) {
 		uint32_t data = MBOX_GET(inverse_cmd);
-		MBOX_PUT(performance_perf, 0x20000000 | (data & 0x7));
+		//MBOX_PUT(performance_perf, 0x20000000 | (data & 0x7));
 
 		float t_p2b_ra_x = fitofl((data >> 22) & 0x3ff, 10, 2);
 		float t_p2b_ra_y = fitofl((data >> 12) & 0x3ff, 10, 2);
@@ -135,7 +135,7 @@ THREAD_ENTRY() {
 
 		debug("angle %d with length diff %f", v_s_aj_l_mina, v_s_aj_l_min);
 
-		MBOX_PUT(performance_perf, 0x21000000 | (data & 0x7));
+		//MBOX_PUT(performance_perf, 0x21000000 | (data & 0x7));
 		MBOX_PUT(servo_cmd, ((v_s_aj_l_mina << 21) | (leg << 18) | 0));
 
 		//if (THREAD_SIGNAL()) {
