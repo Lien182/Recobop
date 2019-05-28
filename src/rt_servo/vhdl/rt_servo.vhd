@@ -40,7 +40,7 @@ architecture implementation of rt_servo is
 	signal i_memif : i_memif_t;
 	signal o_memif : o_memif_t;
 
-	type STATE_TYPE is (STATE_THREAD_INIT,STATE_INIT_DATA,STATE_GET_SERVO_SINK,
+	type STATE_TYPE is (STATE_THREAD_INIT,STATE_INIT_DATA,STATE_GET_SERVO_SINK, STATE_GET_DEMONSTRATOR_NR,
 	                    STATE_CMD,STATE_STORE);
 	signal state : STATE_TYPE;
 
@@ -64,7 +64,7 @@ architecture implementation of rt_servo is
 
 	signal ignore, ret : std_logic_vector(31 downto 0);
 	
-	signal rb_info,servo_base_addr : unsigned(31 downto 0);
+	signal rb_info,servo_base_addr, demonstrator_nr : unsigned(31 downto 0);
 	
 begin
 	osif_setup (
@@ -104,7 +104,9 @@ begin
 			srv3_a <= to_unsigned(900, 11);
 			srv4_a <= to_unsigned(900, 11);
 			srv5_a <= to_unsigned(900, 11);
+			
 		elsif rising_edge(HWT_Clk) then
+
 			case state is
 				when STATE_THREAD_INIT =>
 					osif_read(i_osif, o_osif, ignore, done);
@@ -123,28 +125,26 @@ begin
                         memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 44), ret, done);
                         if done then
                              servo_base_addr <= unsigned(ret);
-                             state <= STATE_CMD;
+                             state <= STATE_GET_DEMONSTRATOR_NR;
                         end if;
-				
+
+				when STATE_GET_DEMONSTRATOR_NR => 
+                        memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 48), ret, done);
+                        if done then
+                             demonstrator_nr <= unsigned(ret);
+                             state <= STATE_CMD;
+                        end if;			
 
 				when STATE_CMD =>
-					osif_mbox_get(i_osif, o_osif, servo_cmd, cmd, done);
+					osif_mbox_get(i_osif, o_osif, std_logic_vector(demonstrator_nr), cmd, done);
+
 					if done then
 						state <= STATE_STORE;
 					end if;
 				
 				when STATE_STORE =>
-					case cmd(C_LEG_RANGE) is
-						when "000" => srv0_a <= unsigned(cmd(C_ANGLE_RANGE));
-						when "001" => srv1_a <= unsigned(cmd(C_ANGLE_RANGE));
-						when "010" => srv2_a <= unsigned(cmd(C_ANGLE_RANGE));
-						when "011" => srv3_a <= unsigned(cmd(C_ANGLE_RANGE));
-						when "100" => srv4_a <= unsigned(cmd(C_ANGLE_RANGE));
-						when "101" => srv5_a <= unsigned(cmd(C_ANGLE_RANGE));
-						when others =>
-					end case;
-					
-					memif_write_word(i_memif, o_memif, std_logic_vector(servo_base_addr(31 downto 3)) & cmd(C_LEG_RANGE),  cmd(C_ANGLE_RANGE), done);
+									
+					memif_write_word(i_memif, o_memif, std_logic_vector(servo_base_addr(31 downto 3)) & cmd(C_LEG_RANGE), x"00000" & '0' & cmd(C_ANGLE_RANGE), done);
                     if done then
                         state <= STATE_CMD;
                     end if;

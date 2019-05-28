@@ -1,3 +1,4 @@
+
 #include "recobop.h"
 
 #include "reconos_thread.h"
@@ -50,13 +51,29 @@ static inline float cos_lut(unsigned int a) {
 }
 
 THREAD_ENTRY() {
+	struct recobop_info *rb_info;
 	int i;
+	struct reconos_thread * rt;
 
+	
 	THREAD_INIT();
+	rt = (struct reconos_thread *)GET_INIT_DATA();
+
+	rb_info = (struct recobop_info*)rt->init_data;
+	
+
+	printf("Inverse Thread for demonstrator %d \n", rb_info->demo_nr);
 
 	while (1) {
-		uint32_t data = MBOX_GET(inverse_cmd);
-		//MBOX_PUT(performance_perf, 0x20000000 | (data & 0x7));
+		uint32_t data;
+
+		switch(rb_info->demo_nr)
+		{
+			case 0: data = MBOX_GET(inverse_0_cmd); break;
+			case 1: data = MBOX_GET(inverse_1_cmd); break;
+			case 2: data = MBOX_GET(inverse_2_cmd); break;
+			default: return; break;
+		}
 
 		float t_p2b_ra_x = fitofl((data >> 22) & 0x3ff, 10, 2);
 		float t_p2b_ra_y = fitofl((data >> 12) & 0x3ff, 10, 2);
@@ -134,13 +151,18 @@ THREAD_ENTRY() {
 		}
 
 		debug("angle %d with length diff %f", v_s_aj_l_mina, v_s_aj_l_min);
+#if 0
+		
+		switch(rb_info->demo_nr)
+		{
+			case 0: MBOX_PUT(servo_0_cmd, ((v_s_aj_l_mina << 21) | (leg << 18) | 0)); break;
+			case 1: MBOX_PUT(servo_1_cmd, ((v_s_aj_l_mina << 21) | (leg << 18) | 0)); break;
+			case 2: MBOX_PUT(servo_2_cmd, ((v_s_aj_l_mina << 21) | (leg << 18) | 0)); break;
+			default: return; break;
+		}
+#else
+	((uint32_t*)(rb_info->pServo))[leg] = v_s_aj_l_mina;
+#endif
 
-		//MBOX_PUT(performance_perf, 0x21000000 | (data & 0x7));
-		MBOX_PUT(servo_cmd, ((v_s_aj_l_mina << 21) | (leg << 18) | 0));
-
-		//if (THREAD_SIGNAL()) {
-		//	printf("Inverse exiting ...\n");
-		//	THREAD_EXIT();
-		//}
 	}
 }

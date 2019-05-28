@@ -239,7 +239,7 @@ extern void *rt_control(void *data);
 /*
  * @see header
  */
-struct reconos_thread *reconos_thread_create_swt_control() {
+struct reconos_thread *reconos_thread_create_swt_control(void * init_data) {
 	struct reconos_thread *rt = (struct reconos_thread *)malloc(sizeof(struct reconos_thread));
 	if (!rt) {
 		panic("[reconos-core] ERROR: failed to allocate memory for thread\n");
@@ -247,9 +247,9 @@ struct reconos_thread *reconos_thread_create_swt_control() {
 
 	int slots[] = {3};
 	reconos_thread_init(rt, "control", 0);
-	reconos_thread_setinitdata(rt, 0);
-	reconos_thread_setallowedslots(rt, slots, 1);
-	reconos_thread_setresourcepointers(rt, resources_control, 3);
+	reconos_thread_setinitdata(rt,init_data);
+	reconos_thread_setallowedslots(rt, slots, 3);
+	reconos_thread_setresourcepointers(rt, resources_control, 1);
 	reconos_thread_setswentry(rt, rt_control);
 	reconos_thread_create_auto(rt, RECONOS_THREAD_SW);
 

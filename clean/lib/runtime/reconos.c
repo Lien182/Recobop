@@ -598,7 +598,7 @@ void hwslot_jointhread(struct hwslot *slot) {
 #define RESOURCE_CHECK_TYPE(p_handle, p_type) \
 	if ((p_handle) >= slot->rt->resource_count) {\
 		panic("[reconos-dt-%d] "\
-		      "ERROR: resource count out of range\n",slot->id);\
+		      "ERROR: resource count out of range; phandle = %d; rt cnt = %d \n",slot->id,p_handle,slot->rt->resource_count);\
 	}\
 	if (slot->rt->resources[(p_handle)].type != (p_type)) {\
 		panic("[reconos-dt-%d] "\

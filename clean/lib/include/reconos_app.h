@@ -140,7 +140,7 @@ struct reconos_thread *reconos_thread_create_hwt_control();
  *
  *   rt   - pointer to the ReconOS thread
  */
-struct reconos_thread *reconos_thread_create_swt_control();
+struct reconos_thread *reconos_thread_create_swt_control(void * init_data);
 
 
 /*

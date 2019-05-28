@@ -24,6 +24,8 @@ struct recobop_info {
 
 	volatile uint32_t pTouch;			// +40
 	volatile uint32_t pServo;			// +44
+	volatile uint32_t demo_nr;			// +48
+	volatile uint32_t* timerregister;
 
 	int thread_count;
 	struct reconos_thread *thread_p[16];

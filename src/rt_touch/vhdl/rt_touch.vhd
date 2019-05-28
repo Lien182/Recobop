@@ -40,14 +40,14 @@ architecture implementation of rt_touch is
 	signal i_memif : i_memif_t;
 	signal o_memif : o_memif_t;
 
-	type STATE_TYPE is (STATE_THREAD_INIT, STATE_INIT_DATA,STATE_CTRL,
+	type STATE_TYPE is (STATE_THREAD_INIT, STATE_INIT_DATA,STATE_CTRL,STATE_GET_DEMONSTRATOR_NR,
 	                    STATE_GET_TOUCH_SOURCE, STATE_READ_X_POS, STATE_CHECK_X_POS, 
 	                    STATE_READ_Y_POS, STATE_WAIT,
 	                    STATE_STORE_POS, STATE_STORE_DELTA);
 	signal state : STATE_TYPE;
 
 
-	signal rb_info : unsigned(31 downto 0);
+	signal rb_info, demonstrator_nr : unsigned(31 downto 0);
 	
 	signal touch_base_addr : unsigned(31 downto 0);
 
@@ -105,8 +105,16 @@ begin
 					osif_get_init_data(i_osif, o_osif, ret, done);
 					if done then
 						rb_info <= unsigned(ret);
-						state <= STATE_GET_TOUCH_SOURCE;
+						state <= STATE_GET_DEMONSTRATOR_NR;
 					end if;
+
+				
+				when STATE_GET_DEMONSTRATOR_NR => 
+                        memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 48), ret, done);
+                        if done then
+                             demonstrator_nr <= unsigned(ret);
+                             state <= STATE_GET_TOUCH_SOURCE;
+                        end if;
 
                 when STATE_GET_TOUCH_SOURCE => 
                     memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 40), ret, done);
@@ -114,7 +122,7 @@ begin
                         touch_base_addr <= unsigned(ret);
                         state <= STATE_READ_X_POS;
                     end if;
-
+					
                 when STATE_READ_X_POS =>
                     memif_read_word(i_memif, o_memif, std_logic_vector(touch_base_addr), ret, done);
                     if done then
@@ -138,14 +146,17 @@ begin
                     end if;                    
                 when STATE_STORE_POS =>
                     if x_pos_s /= x_pos_old OR y_pos_s /= y_pos_old then
-                        osif_mbox_put(i_osif, o_osif, touch_pos, x"00" & x_pos_s & y_pos_s, ignore, done);
+
+						osif_mbox_put(i_osif, o_osif, std_logic_vector(demonstrator_nr), x"00" & x_pos_s & y_pos_s, ignore, done);
+                        
                         if done then
+						    x_pos_old <= x_pos_s;
+                        	y_pos_old <= y_pos_s;
                             state <= STATE_WAIT;
                             cnt <= (others => '0');
                         end if;
                         
-                        x_pos_old <= x_pos_s;
-                        y_pos_old <= y_pos_s;
+
                          
                     else
                         state <= STATE_WAIT;                        

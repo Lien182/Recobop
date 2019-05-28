@@ -25,7 +25,7 @@ static ap_fixed<22,12> average(ap_fixed<22,12> *data, int mc) {
 }
 
 THREAD_ENTRY() {
-	ap_uint<32> rb_info;
+	ap_uint<32> rb_info, demonstrator_nr;
 
 	THREAD_INIT();
 	rb_info.range(31,0)  = GET_INIT_DATA();
@@ -40,12 +40,19 @@ THREAD_ENTRY() {
 
 	ap_uint<32> tmp = 1;		
 	MEM_WRITE(tmp, (uint32)(rb_info+36).range(31,0) , 4);
+	MEM_READ( (uint32)(rb_info+48).range(31,0),demonstrator_nr , 4);
 
-
+	debug_port->range(3,2) = demonstrator_nr.range(1,0);
 	while (1) {
 
 		ap_uint<32> pos;
-		pos.range(31,0) = MBOX_GET(touch_pos);
+		switch(demonstrator_nr)
+		{
+			case 0: pos.range(31,0) = MBOX_GET(touch_0_pos); break;
+			case 1: pos.range(31,0) = MBOX_GET(touch_1_pos); break;
+			case 2: pos.range(31,0) = MBOX_GET(touch_2_pos); break;
+			default: break;
+		};
 		ap_uint<32> wait;
 		wait.range(31,0) =  100000;   //MBOX_GET(touch_pos);
 		//MBOX_PUT(performance_perf, (ap_uint<8>("10", 16), ap_uint<24>(0)));
@@ -125,15 +132,14 @@ THREAD_ENTRY() {
 		ap_uint<9> cmd_a = len;
 
 
-		//MBOX_PUT(performance_perf, (ap_uint<8>("11", 16), ap_uint<24>(0)));
-		for (int i = 0; i < 6; i++) {
-			MBOX_PUT(inverse_cmd, (cmd_x, cmd_y, cmd_a, (ap_uint<3>)i));
+		switch(demonstrator_nr)
+		{
+			case 0: for (int i = 0; i < 6; i++) MBOX_PUT(inverse_0_cmd, (cmd_x, cmd_y, cmd_a, (ap_uint<3>)i)); break;
+			case 1: for (int i = 0; i < 6; i++) MBOX_PUT(inverse_1_cmd, (cmd_x, cmd_y, cmd_a, (ap_uint<3>)i)); break;
+			case 2: for (int i = 0; i < 6; i++) MBOX_PUT(inverse_2_cmd, (cmd_x, cmd_y, cmd_a, (ap_uint<3>)i)); break;
+			default: break;
 		}
 
-		// saw
-		//ap_uint<32> saw[1] = { len };
-		//uint32 tmp = saw[0].range(31,0);
-		//rb_info += 36;
 
 
 	}
