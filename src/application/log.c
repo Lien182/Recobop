@@ -1,17 +1,35 @@
 #include "log.h"
 
+//Internal defines
+
+
+#define LOG_INTERNAL_MODE_SINGLE		0x00000004
+#define LOG_INTERNAL_MODE_DIFFERENCE	0x00000008
+
+
 
 uint32_t log_check(t_log * log)
 {
 	uint32_t cnt;
 
-	if(log->channel == LOG_CHANNEL_0)
-		cnt = log->timer->TLR0;
+	if((log->mode & LOG_MODE_AXI_CHANNEL) == LOG_MODE_AXI_CHANNEL)
+	{
+		if(log->channel == LOG_CHANNEL_0)
+			cnt = log->timer->TLR0;
+		else
+			cnt = log->timer->TLR1;
+	}
 	else
-		cnt = log->timer->TLR1;
+	{
+		cnt = log->a9timer_capture.tStart;
+		
+	}
+	
+
 	
 	if(log->bStart) // Difference makes no sense for the first sample
 	{
+		
 		log->bStart = 0UL;
 		log->lasttimervalue = cnt;
 		log->samplecnt = 1;
@@ -38,18 +56,23 @@ uint32_t log_check_difference(t_log * log)
 {
 	uint32_t cnt_0, cnt_1;
 
-	cnt_0 = log->diff_measurement->CAP0;
+	if((log->mode & LOG_MODE_DIFFERENCE_UNIT) == LOG_MODE_DIFFERENCE_UNIT)
+	{
+		cnt_0 = log->diff_measurement->CAP0;
 
-	if(log->channel == LOG_CHANNEL_1)
-		cnt_1 = log->diff_measurement->CAP1;
-	else if(log->channel == LOG_CHANNEL_2)
-		cnt_1 = log->diff_measurement->CAP2;
-	else if(log->channel == LOG_CHANNEL_3)
-		cnt_1 = log->diff_measurement->CAP3;
+		if(log->channel == LOG_CHANNEL_1)
+			cnt_1 = log->diff_measurement->CAP1;
+		else if(log->channel == LOG_CHANNEL_2)
+			cnt_1 = log->diff_measurement->CAP2;
+		else if(log->channel == LOG_CHANNEL_3)
+			cnt_1 = log->diff_measurement->CAP3;
+	}
+	else
+	{
+		cnt_0 = log->a9timer_capture.tStart;
+		cnt_1 = log->a9timer_capture.tStop;
+	}
 	
-
-
-
 	if(log->bStart) // Difference makes no sense for the first sample
 	{
 		log->bStart = 0UL;
@@ -84,23 +107,39 @@ void log_checkthread(t_log * log)
 {
 	while(log->bStop != 1)
 	{
-		if(log->mode & LOG_MODE_SINGLE)
+		if(log->mode & LOG_INTERNAL_MODE_SINGLE)
 			log_check(log);
-		else if(log->mode & LOG_MODE_DIFFERENCE)
+		else if(log->mode & LOG_INTERNAL_MODE_DIFFERENCE)
 			log_check_difference(log);
-		
-		
-		usleep(1);
+
+		usleep(10);
 	}
 
 }
 
-void log_init(t_log * log, t_axi_timer* timer, t_diff_measurement* diff_timer, uint32_t channel, uint32_t mode, char * filename, double scale, char * unit)
+void log_init(t_log * log, void * measurement_unit, uint32_t channel, uint32_t mode, char * filename, double scale, char * unit)
 {
-	if(mode & LOG_MODE_SINGLE)
-		log->timer = timer;
-	else if(mode & LOG_MODE_DIFFERENCE)
-		log->diff_measurement = diff_timer;
+	if((mode & LOG_MODE_AXI_CHANNEL) == LOG_MODE_AXI_CHANNEL)
+	{
+		log->timer = (t_axi_timer*)measurement_unit;
+		printf("Log: LOG_MODE_AXI_CHANNEL \n");
+	}	
+	else if((mode & LOG_MODE_DIFFERENCE_UNIT) == LOG_MODE_DIFFERENCE_UNIT)
+	{
+		log->diff_measurement = (t_diff_measurement*)measurement_unit;
+		printf("Log: LOG_MODE_DIFFERENCE_UNIT \n");
+	}	
+	else if((mode & LOG_MODE_A9TIMER_CHANNEL) == LOG_MODE_A9TIMER_CHANNEL)
+	{
+		log->a9timer = (t_a9timer*)measurement_unit;
+		printf("Log: LOG_MODE_A9TIMER_CHANNEL \n");
+	}		
+	else if((mode & LOG_MODE_A9TIMER_DIFFERENCE) == LOG_MODE_A9TIMER_DIFFERENCE)
+	{
+		log->a9timer = (t_a9timer*)measurement_unit;
+		printf("Log: LOG_MODE_A9TIMER_DIFFERENCE \n");
+	}
+		
 
 	log->fd = fopen(filename, "w+");
 	if(log->fd == NULL)
@@ -117,6 +156,8 @@ void log_init(t_log * log, t_axi_timer* timer, t_diff_measurement* diff_timer, u
 	log->mode = mode;
 	log->unit = unit;
 	log->filename = filename;
+	log->a9timer_capture.tStart = 0;
+	log->a9timer_capture.tStop = 0;
 
 	if(pthread_create(&(log->thread), 0, &log_checkthread, log) != 0)
 	{

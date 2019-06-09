@@ -20,6 +20,7 @@
 
 #include "axi_timer.h"
 #include "difference_measurement.h"
+#include "a9timer.h"
 
 typedef struct 
 {
@@ -41,6 +42,10 @@ typedef struct
     uint32_t bStart;
 	uint32_t bStop;
 
+	t_a9timer * a9timer;
+	t_a9timer_capture a9timer_capture;
+
+
 }t_log;
 
 #define LOG_CHANNEL_0 		0 
@@ -51,13 +56,17 @@ typedef struct
 #define LOG_MODE_STDOUT 	1
 #define LOG_MODE_FILE		2 
 
-#define LOG_MODE_SINGLE 	4
-#define LOG_MODE_DIFFERENCE 8
+#define LOG_MODE_AXI_CHANNEL 			0x00000044
+#define LOG_MODE_DIFFERENCE_UNIT 		0x00000088
+#define LOG_MODE_A9TIMER_CHANNEL		0x00000014
+#define LOG_MODE_A9TIMER_DIFFERENCE 	0x00000028
+
+
 
 
 uint32_t    log_check	(t_log * log);
 void        log_deinit	(t_log * log);
 void        log_checkthread (t_log * log);
-void 		log_init (t_log * log, t_axi_timer* timer, t_diff_measurement* diff_timer, uint32_t channel, uint32_t mode, char * filename, double scale, char * unit);
+void 		log_init (t_log * log, void * measurement_unit, uint32_t channel, uint32_t mode, char * filename, double scale, char * unit);
 
 #endif

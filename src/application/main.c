@@ -20,6 +20,7 @@
 
 #include "log.h"
 #include "axi_timer.h"
+#include "a9timer.h"
 #include "difference_measurement.h"
 #include "memory.h"
 
@@ -111,8 +112,13 @@ int main(int argc, char **argv) {
 
 	t_diff_measurement * diff_timer_mailbox_0;
 
+	t_a9timer * a9timer;
+
+
 	t_log log_demonstrator_0;
 	t_log log_mailbox_0;
+
+	t_log log_a9timertest;
 
 
 	printf("Hello World\n");
@@ -127,15 +133,19 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
+	a9timer = a9timer_init();
+
 	axi_timer_0 = axi_timer_init(0x42800000);
 	axi_timer_start(axi_timer_0, TIMER_AXI_START_CHANNEL_0);
 	
 	axi_timer_demonstrator_0 = axi_timer_init(0x42810000);
-	log_init(&log_demonstrator_0,axi_timer_demonstrator_0, NULL, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_SINGLE, "demonstrator_0.csv", 0.00001, "ms");
+	log_init(&log_demonstrator_0, (void*)axi_timer_demonstrator_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_AXI_CHANNEL, "demonstrator_0.csv", 0.00001, "ms");
 	axi_timer_start(axi_timer_demonstrator_0, TIMER_AXI_START_CHANNEL_1);
 
 	diff_timer_mailbox_0 = diff_timer_init(0x43C80000);
-	log_init(&log_mailbox_0, NULL, diff_timer_mailbox_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE, "mailbox_0.csv", 0.00001, "ms");
+	log_init(&log_mailbox_0, (void*)diff_timer_mailbox_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "mailbox_0.csv", 0.00001, "ms");
+	
+	log_init(&log_a9timertest, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_CHANNEL | LOG_MODE_FILE | LOG_MODE_STDOUT, "a9test.csv", 0.00000333, "ms");
 	
 
 
@@ -175,7 +185,7 @@ int main(int argc, char **argv) {
 		rb_info[i].thread_p[1] = reconos_thread_create_hwt_servo(  (void *)&(rb_info[i]));
 		rb_info[i].thread_p[2] = reconos_thread_create_swt_control((void *)&(rb_info[i]));
 		rb_info[i].thread_p[3] = reconos_thread_create_hwt_inverse((void *)&(rb_info[i]));
-		rb_info[i].thread_p[4] = reconos_thread_create_hwt_touch(  (void *)&(rb_info[i]));
+		//rb_info[i].thread_p[4] = reconos_thread_create_hwt_touch(  (void *)&(rb_info[i]));
 
 	}
 
@@ -245,7 +255,7 @@ int main(int argc, char **argv) {
 
 
 
-#if 0
+#if 1
 	printf("Testing control algorithm ...\n");
 	for (a = 0; a < 10000000; a+=1) {
 		x = cos(a * M_PI / 180) * 1000;
@@ -253,16 +263,19 @@ int main(int argc, char **argv) {
 		
 		printf("Mailbox 0\n");
 		mbox_put(touch_0_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
-		printf("Mailbox 1\n");
-		mbox_put(touch_1_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
-		printf("Mailbox 2\n");
-		mbox_put(touch_2_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
+		//printf("Mailbox 1\n");
+		//mbox_put(touch_1_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
+		//printf("Mailbox 2\n");
+		//mbox_put(touch_2_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
 		
 		//printf("0: Servo data: 0: %x, 1: %x \n",((uint32_t*)rb_info[0].pServo)[0] & 0x0fff,((uint32_t*)rb_info[0].pServo)[1] & 0x0fff);
 		
 		
 		//mbox_put(touch_pos, 1000000);
 		usleep(30000);
+		a9timer_caputure(a9timer, &(log_a9timertest.a9timer_capture), A9TIMER_CAPTURE_SINGLE);
+
+		printf("%x ; %x \n", log_a9timertest.a9timer_capture.tStart, a9timer->TMR_CNT_REG_L);
 	}
 #endif
 
