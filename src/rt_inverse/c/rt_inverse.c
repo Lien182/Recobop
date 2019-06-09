@@ -72,7 +72,7 @@ THREAD_ENTRY() {
 			case 0: data = MBOX_GET(inverse_0_cmd); break;
 			case 1: data = MBOX_GET(inverse_1_cmd); break;
 			case 2: data = MBOX_GET(inverse_2_cmd); break;
-			default: return; break;
+			default: printf("ERROR: Wrong demonstrator number!!\n");return; break;
 		}
 
 		float t_p2b_ra_x = fitofl((data >> 22) & 0x3ff, 10, 2);
@@ -151,8 +151,8 @@ THREAD_ENTRY() {
 		}
 
 		debug("angle %d with length diff %f", v_s_aj_l_mina, v_s_aj_l_min);
-#if 0
-		
+#if 1
+		printf("Demonstrator %d: Put data into servo mailbox, Leg %d \n", rb_info->demo_nr, leg);
 		switch(rb_info->demo_nr)
 		{
 			case 0: MBOX_PUT(servo_0_cmd, ((v_s_aj_l_mina << 21) | (leg << 18) | 0)); break;

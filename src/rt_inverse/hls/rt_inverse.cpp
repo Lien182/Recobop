@@ -51,7 +51,7 @@ THREAD_ENTRY() {
 
 	while (1) {
 
-		debug_port->range(3,2) = demonstrator_nr.range(1,0);
+		debug_port->range(31,30) = demonstrator_nr.range(1,0);
 
 		ap_uint<32> data;
 		debug_port->range(1,1) = 0;
@@ -143,6 +143,16 @@ THREAD_ENTRY() {
 			}
 		}
 
+		if(cmd_l == 0)
+		{
+			debug_port->range(2,2) = 1;
+			ap_wait();
+		}
+
+		debug_port->range(2,2) = 0;
+
+		debug_port->range(3,3) = 0;
+		
 		switch(demonstrator_nr)
 		{
 			case 0: MBOX_PUT(servo_0_cmd, (v_s_aj_l_mina, cmd_l, ap_uint<18>(0))); break;
@@ -150,5 +160,9 @@ THREAD_ENTRY() {
 			case 2: MBOX_PUT(servo_2_cmd, (v_s_aj_l_mina, cmd_l, ap_uint<18>(0))); break;
 			default: break;
 		}
+		debug_port->range(3,3) = 1;
+		
+		
+		
 	}
 }

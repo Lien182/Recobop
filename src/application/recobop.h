@@ -8,28 +8,28 @@
 #include <string.h>
 
 struct recobop_info {
-	float saw_vin;				// +0
-	float saw_vsense;			// +4
-	float saw_power;			// +8
-	uint32_t saw_pos;			// +12
+	volatile float saw_vin;				// +0
+	volatile float saw_vsense;			// +4
+	volatile float saw_power;			// +8
+	volatile uint32_t saw_pos;			// +12
 
-	uint32_t ctrl_touch_wait;	// +16
+	volatile uint32_t ctrl_touch_wait;	// +16
 
-	uint32_t perf_touch;		// +20
-	uint32_t perf_control;		// +24
-	uint32_t perf_inverse;		// +28
-	uint32_t perf_all;			// +32
+	volatile uint32_t perf_touch;		// +20
+	volatile uint32_t perf_control;		// +24
+	volatile uint32_t perf_inverse;		// +28
+	volatile uint32_t perf_all;			// +32
 
-	uint32_t ctrl_angle;		// +36
+	volatile uint32_t ctrl_angle;		// +36
 
-	volatile uint32_t pTouch;			// +40
-	volatile uint32_t pServo;			// +44
+	volatile uint32_t* pTouch;			// +40
+	volatile uint32_t* pServo;			// +44
 	volatile uint32_t demo_nr;			// +48
 	volatile uint32_t* timerregister;
 
-	int thread_count;
-	struct reconos_thread *thread_p[16];
-};
+	volatile int thread_count;
+	volatile struct reconos_thread *thread_p[16];
+}__attribute__((packed));
 
 static inline float rbi_ctrl_angle(struct recobop_info *rb_info) {
 	return rb_info->ctrl_angle * 0.1;

@@ -9,10 +9,11 @@
 #include <stdio.h>
 
 #define KP -0.06
-//#define KI -0.00000001
-#define KI 0
+#define KI -0.00000001
+//#define KI 0
 //#define KD -28
-#define KD -10
+#define KD -10 //SW 
+#define KD -12
 
 #define MC 16
 #define MCL 4
@@ -64,7 +65,7 @@ THREAD_ENTRY() {
 			default: printf("ERROR: Wrong demonstrator number!!\n");return; break;
 		}
 		 
-#if 1
+#if 0
 	pos = (((uint32_t*)rb_info->pTouch)[1] & 0x00fff) | (((uint32_t*)rb_info->pTouch)[0] & 0x00fff )<< 12;
 #endif
 

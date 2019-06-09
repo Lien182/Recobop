@@ -30,7 +30,8 @@ entity rt_servo is
 
 		HWT_Clk    : in  std_logic;
 		HWT_Rst    : in  std_logic;
-		HWT_Signal : in  std_logic
+		HWT_Signal : in  std_logic;
+		HWT_MBREAD : out std_logic
 	);
 end entity rt_servo;
 
@@ -106,7 +107,7 @@ begin
 			srv5_a <= to_unsigned(900, 11);
 			
 		elsif rising_edge(HWT_Clk) then
-
+			HWT_MBREAD <= '0';
 			case state is
 				when STATE_THREAD_INIT =>
 					osif_read(i_osif, o_osif, ignore, done);
@@ -140,11 +141,14 @@ begin
 
 					if done then
 						state <= STATE_STORE;
+						if cmd(C_LEG_RANGE) = "000" then
+							HWT_MBREAD <= '1';
+						end if;
 					end if;
 				
 				when STATE_STORE =>
 									
-					memif_write_word(i_memif, o_memif, std_logic_vector(servo_base_addr(31 downto 3)) & cmd(C_LEG_RANGE), x"00000" & '0' & cmd(C_ANGLE_RANGE), done);
+					memif_write_word(i_memif, o_memif, std_logic_vector(servo_base_addr(31 downto 5)) & cmd(C_LEG_RANGE) & "00", x"00000" & '0' & cmd(C_ANGLE_RANGE), done);
                     if done then
                         state <= STATE_CMD;
                     end if;
