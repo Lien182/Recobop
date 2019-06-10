@@ -2,6 +2,8 @@
 #define RECOBOP_H
 
 #include "reconos.h"
+#include "log.h"
+#include "a9timer.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -24,62 +26,13 @@ struct recobop_info {
 
 	volatile uint32_t* pTouch;			// +40
 	volatile uint32_t* pServo;			// +44
-	volatile uint32_t demo_nr;			// +48
+	volatile uint32_t  demo_nr;			// +48
 	volatile uint32_t* timerregister;
 
 	volatile int thread_count;
 	volatile struct reconos_thread *thread_p[16];
 }__attribute__((packed));
 
-static inline float rbi_ctrl_angle(struct recobop_info *rb_info) {
-	return rb_info->ctrl_angle * 0.1;
-}
-
-static inline float rbi_saw_power(struct recobop_info *rb_info) {
-	return rb_info->saw_power;
-}
-
-static inline int rbi_saw_pos_x(struct recobop_info *rb_info) {
-	int pos_x = (rb_info->saw_pos >> 12) & 0xfff;
-	if (((pos_x >> 11) & 0x1) == 1) {
-		pos_x |= 0xfffff000;
-	}
-
-	return pos_x;
-}
-
-static inline int rbi_saw_pos_y(struct recobop_info *rb_info) {
-	int pos_y = (rb_info->saw_pos >> 0) & 0xfff;
-	if (((pos_y >> 11) & 0x1) == 1) {
-		pos_y |= 0xfffff000;
-	}
-
-	return pos_y;
-}
-
-static inline float rbi_perf_touch(struct recobop_info *rb_info) {
-	//printf("%f\n", rb_info->perf_touch / 100000.0);
-	return rb_info->perf_touch / 100000.0;
-}
-
-static inline float rbi_perf_control(struct recobop_info *rb_info) {
-	//printf("%f\n", rb_info->perf_control / 100000.0);
-	return rb_info->perf_control / 100000.0;
-}
-
-static inline float rbi_perf_inverse(struct recobop_info *rb_info) {
-	//printf("%f\n", rb_info->perf_inverse / 100000.0);
-	return rb_info->perf_inverse / 100000.0;
-}
-
-static inline float rbi_perf_overhead(struct recobop_info *rb_info) {
-	//printf("%f\n", rb_info->perf_all / 100000.0);
-	return (rb_info->perf_all - rb_info->perf_touch - rb_info->perf_control - rb_info->perf_inverse) / 100000.0;
-}
-
-static inline float rbi_ctrl_touch_wait(struct recobop_info *rb_info) {
-	return rb_info->ctrl_touch_wait / 100000.0;
-}
 
 static inline int rbi_thread_count_m(struct recobop_info *rb_info,
                                      char *thread_name, int thread_mode) {
@@ -205,4 +158,15 @@ static inline float fitofl(uint32_t f, int n, int dn) {
 	return d + w;
 }
 
+
+t_log log_sw_control;
+t_log log_sw_inverse;
+
+t_a9timer * a9timer;
+
+#else
+extern t_log log_sw_control;
+extern t_log log_sw_inverse;
+
+extern t_a9timer * a9timer;
 #endif /* RECOBOP_H */

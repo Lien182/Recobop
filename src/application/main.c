@@ -112,13 +112,15 @@ int main(int argc, char **argv) {
 
 	t_diff_measurement * diff_timer_mailbox_0;
 
-	t_a9timer * a9timer;
+	
 
 
 	t_log log_demonstrator_0;
 	t_log log_mailbox_0;
 
 	t_log log_a9timertest;
+
+	t_log log_hw_inverse;
 
 
 	printf("Hello World\n");
@@ -139,16 +141,20 @@ int main(int argc, char **argv) {
 	axi_timer_start(axi_timer_0, TIMER_AXI_START_CHANNEL_0);
 	
 	axi_timer_demonstrator_0 = axi_timer_init(0x42810000);
-	log_init(&log_demonstrator_0, (void*)axi_timer_demonstrator_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_AXI_CHANNEL, "demonstrator_0.csv", 0.00001, "ms");
+	log_init(&log_demonstrator_0, (void*)axi_timer_demonstrator_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_AXI_CHANNEL, "demonstrator_0.csv", 0.00001, "ms", 1000);
 	axi_timer_start(axi_timer_demonstrator_0, TIMER_AXI_START_CHANNEL_1);
 
 	diff_timer_mailbox_0 = diff_timer_init(0x43C80000);
-	log_init(&log_mailbox_0, (void*)diff_timer_mailbox_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "mailbox_0.csv", 0.00001, "ms");
+	log_init(&log_mailbox_0, (void*)diff_timer_mailbox_0, LOG_CHANNEL_0, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "mailbox_0.csv", 0.00001, "ms", 1000);
 	
-	log_init(&log_a9timertest, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_CHANNEL | LOG_MODE_FILE | LOG_MODE_STDOUT, "a9test.csv", 0.00000333, "ms");
+	log_init(&log_a9timertest, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_CHANNEL | LOG_MODE_FILE | LOG_MODE_STDOUT, "a9test.csv", 0.00000333, "ms", 1000);
 	
+	log_init(&log_sw_control, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_DIFFERENCE | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_control.csv", 0.00000333, "ms", 1000);
+	log_init(&log_sw_inverse, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_DIFFERENCE | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_inverse.csv", 0.00000333, "ms", 1);
+	
+	log_init(&log_hw_inverse, (void*)diff_timer_mailbox_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "hw_inverse.csv", 0.00001, "ms", 1000);
 
-
+	
 	rb_info[0].pServo = (uint32_t)servo_init(memfd, BOP_0_SERVO_BASE_ADDR);
 	rb_info[0].pTouch = (uint32_t)touch_init(memfd, BOP_0_TOUCH_BASE_ADDR);
 	rb_info[0].demo_nr = 0;
@@ -178,7 +184,7 @@ int main(int argc, char **argv) {
 
 	printf("Initializing Info\n");
 	sleep(1);
-	for(i = 0; i < 2; i++)
+	for(i = 0; i < 3; i++)
 	{
 		printf("Init Data on %x \n", (void *)&(rb_info[i]));
 		rb_info[i].ctrl_touch_wait = 1000000;
@@ -189,10 +195,7 @@ int main(int argc, char **argv) {
 
 	}
 
-	
-	printf("%d %x %x \n", &(((uint32_t*)rb_info[0].pTouch)[1])-&(((uint32_t*)rb_info[0].pTouch)[0]), &(((uint32_t*)rb_info[0].pTouch)[0]), &(((uint32_t*)rb_info[0].pTouch)[1])); 
-	
-
+		
 #if 0
 	int sum = 1000;
 	float overhead;
@@ -263,10 +266,10 @@ int main(int argc, char **argv) {
 		
 		printf("Mailbox 0\n");
 		mbox_put(touch_0_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
-		//printf("Mailbox 1\n");
-		//mbox_put(touch_1_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
-		//printf("Mailbox 2\n");
-		//mbox_put(touch_2_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
+		printf("Mailbox 1\n");
+		mbox_put(touch_1_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
+		printf("Mailbox 2\n");
+		mbox_put(touch_2_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
 		
 		//printf("0: Servo data: 0: %x, 1: %x \n",((uint32_t*)rb_info[0].pServo)[0] & 0x0fff,((uint32_t*)rb_info[0].pServo)[1] & 0x0fff);
 		
@@ -275,7 +278,7 @@ int main(int argc, char **argv) {
 		usleep(30000);
 		a9timer_caputure(a9timer, &(log_a9timertest.a9timer_capture), A9TIMER_CAPTURE_SINGLE);
 
-		printf("%x ; %x \n", log_a9timertest.a9timer_capture.tStart, a9timer->TMR_CNT_REG_L);
+		printf("%x %x \n", diff_timer_mailbox_0->CAP2, diff_timer_mailbox_0->CAP3);
 	}
 #endif
 

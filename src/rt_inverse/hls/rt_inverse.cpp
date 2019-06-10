@@ -66,6 +66,13 @@ THREAD_ENTRY() {
 		debug_port->range(0,0) = 0;
 		debug_port->range(1,1) = 1;
 
+		if(data(2, 0) == 0)
+		{
+			debug_port->range(2,2) = 1;
+			ap_wait();
+			debug_port->range(2,2) = 0;
+		}	
+
 		ap_uint<10> cmd_x = data(31, 22);
 		ap_uint<10> cmd_y = data(21, 12);
 		ap_uint<9>  cmd_a = data(11, 3);
@@ -143,15 +150,14 @@ THREAD_ENTRY() {
 			}
 		}
 
-		if(cmd_l == 0)
+		if(data(2, 0) == 0)
 		{
-			debug_port->range(2,2) = 1;
+			debug_port->range(3,3) = 1;
 			ap_wait();
-		}
+			debug_port->range(3,3) = 0;
+		}		
 
-		debug_port->range(2,2) = 0;
-
-		debug_port->range(3,3) = 0;
+		
 		
 		switch(demonstrator_nr)
 		{
@@ -160,8 +166,13 @@ THREAD_ENTRY() {
 			case 2: MBOX_PUT(servo_2_cmd, (v_s_aj_l_mina, cmd_l, ap_uint<18>(0))); break;
 			default: break;
 		}
-		debug_port->range(3,3) = 1;
-		
+	
+		if(data(2, 0) == 0)
+		{
+			debug_port->range(4,4) = 1;
+			ap_wait();
+			debug_port->range(4,4) = 0;
+		}
 		
 		
 	}

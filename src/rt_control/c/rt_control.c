@@ -5,6 +5,7 @@
 #include "reconos_calls.h"
 #include "utils.h"
 
+
 #include <math.h>
 #include <stdio.h>
 
@@ -64,7 +65,8 @@ THREAD_ENTRY() {
 			case 2: pos = MBOX_GET(touch_2_pos); break;
 			default: printf("ERROR: Wrong demonstrator number!!\n");return; break;
 		}
-		 
+		if(rb_info->demo_nr == 0)
+			a9timer_caputure(a9timer, &(log_sw_control.a9timer_capture), A9TIMER_CAPTURE_START); 
 #if 0
 	pos = (((uint32_t*)rb_info->pTouch)[1] & 0x00fff) | (((uint32_t*)rb_info->pTouch)[0] & 0x00fff )<< 12;
 #endif
@@ -88,7 +90,9 @@ THREAD_ENTRY() {
 		float delta = 10;
 		int mc = -(int)delta / 6 + 17;
 
-		printf("Demonstrator %d: position of ball on plate %d %d \n", rb_info->demo_nr, p_p_b_x, p_p_b_y);
+#if 0
+		//printf("Demonstrator %d: position of ball on plate %d %d \n", rb_info->demo_nr, p_p_b_x, p_p_b_y);
+#endif
 		//printf("position of ball on plate %d %d (%f)\n", p_p_b_x, p_p_b_y, delta);
 		//printf("%d %d %f %f\n", p_p_b_x, p_p_b_y, (16*sin(dd) * sin(dd) * sin(dd)) * 38, (13*cos(dd) - 5*cos(2*dd) - 2*cos(3*dd) - cos(4*dd)) * 38);
 
@@ -166,6 +170,8 @@ THREAD_ENTRY() {
 		uint32_t cmd_y = fltofi(t_p2b_ra_y, 10, 2);
 		uint32_t cmd_a = len;
 
+		if(rb_info->demo_nr == 0)
+			a9timer_caputure(a9timer, &(log_sw_control.a9timer_capture), A9TIMER_CAPTURE_STOP);
 #if 1	
 		switch(rb_info->demo_nr)
 		{

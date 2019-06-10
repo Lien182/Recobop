@@ -58,14 +58,18 @@ uint32_t log_check_difference(t_log * log)
 
 	if((log->mode & LOG_MODE_DIFFERENCE_UNIT) == LOG_MODE_DIFFERENCE_UNIT)
 	{
-		cnt_0 = log->diff_measurement->CAP0;
-
-		if(log->channel == LOG_CHANNEL_1)
+		
+		if(log->channel == LOG_CHANNEL_0)
+		{
+			cnt_0 = log->diff_measurement->CAP0;
 			cnt_1 = log->diff_measurement->CAP1;
-		else if(log->channel == LOG_CHANNEL_2)
-			cnt_1 = log->diff_measurement->CAP2;
-		else if(log->channel == LOG_CHANNEL_3)
+		}
+		else if(log->channel == LOG_CHANNEL_1)
+		{
+			cnt_0 = log->diff_measurement->CAP2;
 			cnt_1 = log->diff_measurement->CAP3;
+		}
+			
 	}
 	else
 	{
@@ -112,12 +116,12 @@ void log_checkthread(t_log * log)
 		else if(log->mode & LOG_INTERNAL_MODE_DIFFERENCE)
 			log_check_difference(log);
 
-		usleep(10);
+		usleep(log->sleeptime);
 	}
 
 }
 
-void log_init(t_log * log, void * measurement_unit, uint32_t channel, uint32_t mode, char * filename, double scale, char * unit)
+void log_init(t_log * log, void * measurement_unit, uint32_t channel, uint32_t mode, char * filename, double scale, char * unit, uint32_t sleeptime)
 {
 	if((mode & LOG_MODE_AXI_CHANNEL) == LOG_MODE_AXI_CHANNEL)
 	{
@@ -147,6 +151,7 @@ void log_init(t_log * log, void * measurement_unit, uint32_t channel, uint32_t m
 		printf("LOG_INIT: Open %s failed \n", filename);
 	}
 
+	log->sleeptime = sleeptime;
 	log->bStart = 1UL;
 	log->bStop = 0UL;
 	log->lasttimervalue = 0;
