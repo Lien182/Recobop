@@ -118,22 +118,34 @@ begin
 				when STATE_INIT_DATA =>
                      osif_get_init_data(i_osif, o_osif, ret, done);
                      if done then
-                        rb_info <= unsigned(ret);
-                        state <= STATE_GET_SERVO_SINK;
+					 	if ret /= x"00000000" then
+							rb_info <= unsigned(ret);
+							state <= STATE_GET_SERVO_SINK;
+						else
+							state <= STATE_GET_SERVO_SINK;
+						end if;
                      end if;
                         
                 when STATE_GET_SERVO_SINK => 
                         memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 4), ret, done);
                         if done then
-                             servo_base_addr <= unsigned(ret);
-                             state <= STATE_GET_DEMONSTRATOR_NR;
+							if ret /= x"00000000" then
+                            	servo_base_addr <= unsigned(ret);
+                            	state <= STATE_GET_DEMONSTRATOR_NR;
+							else
+								state <= STATE_INIT_DATA;
+							end if;
                         end if;
 
 				when STATE_GET_DEMONSTRATOR_NR => 
                         memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 8), ret, done);
                         if done then
-                             demonstrator_nr <= unsigned(ret);
-                             state <= STATE_CMD;
+							if ret < x"00000003" then
+                            	demonstrator_nr <= unsigned(ret);
+                            	state <= STATE_CMD;
+							else 
+								state <= STATE_INIT_DATA;
+							end if;
                         end if;			
 
 				when STATE_CMD =>

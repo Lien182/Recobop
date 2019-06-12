@@ -55,6 +55,15 @@ THREAD_ENTRY() {
 			case 2: pos.range(31,0) = MBOX_GET(touch_2_pos); break;
 			default: break;
 		};
+		if(demonstrator_nr == 0)
+		{
+			#pragma HLS PROTOCOL fixed
+			*debug_port |= (1<<2);
+			ap_wait();
+			*debug_port &= ~(1<<2);
+			ap_wait();
+
+		}	
 		ap_uint<32> wait;
 		wait.range(31,0) =  100000;   //MBOX_GET(touch_pos);
 		//MBOX_PUT(performance_perf, (ap_uint<8>("10", 16), ap_uint<24>(0)));
@@ -133,13 +142,32 @@ THREAD_ENTRY() {
 		}
 		ap_uint<9> cmd_a = len;
 
+		
+		if(demonstrator_nr == 0)
+		{
+			#pragma HLS PROTOCOL fixed
+			*debug_port |= (1<<3);
+			ap_wait();
+			*debug_port &= ~(1<<3);
+			ap_wait();
 
+		}
 		switch(demonstrator_nr)
 		{
 			case 0: for (int i = 0; i < 6; i++) MBOX_PUT(inverse_0_cmd, (cmd_x, cmd_y, cmd_a, (ap_uint<3>)i)); break;
 			case 1: for (int i = 0; i < 6; i++) MBOX_PUT(inverse_1_cmd, (cmd_x, cmd_y, cmd_a, (ap_uint<3>)i)); break;
 			case 2: for (int i = 0; i < 6; i++) MBOX_PUT(inverse_2_cmd, (cmd_x, cmd_y, cmd_a, (ap_uint<3>)i)); break;
 			default: break;
+		}
+
+		if(demonstrator_nr == 0)
+		{
+			#pragma HLS PROTOCOL fixed
+			*debug_port |= (1<<4);
+			ap_wait();
+			*debug_port &= ~(1<<4);
+			ap_wait();
+
 		}
 	}
 }

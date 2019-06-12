@@ -58,7 +58,6 @@ THREAD_ENTRY() {
 	
 	THREAD_INIT();
 	rt = (struct reconos_thread *)GET_INIT_DATA();
-
 	rb_info = (struct recobop_info*)rt->init_data;
 	
 
@@ -74,7 +73,7 @@ THREAD_ENTRY() {
 			case 2: data = MBOX_GET(inverse_2_cmd); break;
 			default: printf("ERROR: Wrong demonstrator number!!\n");return; break;
 		}
-		if(rb_info->demo_nr == 0 && ((data >> 0) & 0x7)==0)
+		if((rb_info->demo_nr == 0) && ((data >> 0) & 0x7)==0)
 			a9timer_caputure(a9timer, &(log_sw_inverse.a9timer_capture), A9TIMER_CAPTURE_START);
 
 		float t_p2b_ra_x = fitofl((data >> 22) & 0x3ff, 10, 2);
@@ -82,9 +81,6 @@ THREAD_ENTRY() {
 		float t_p2b_ra_sin = sin_lut((data >> 3) & 0x1ff);
 		float t_p2b_ra_cos = cos_lut((data >> 3) & 0x1ff);
 		int leg = (data >> 0) & 0x7;
-
-		debug("x rot %f and y rot %f", t_p2b_ra_x, t_p2b_ra_y);
-		debug("sine %f and cosine %f", t_p2b_ra_sin, t_p2b_ra_cos);
 
 		float p_b_j_x, p_b_j_y, p_b_j_z;
 		float p_s_j_x, p_s_j_y, p_s_j_z;
@@ -103,12 +99,9 @@ THREAD_ENTRY() {
 		p_b_j_z =   (t_p2b_ra_x * 0          * (1 - t_p2b_ra_cos) - t_p2b_ra_y * t_p2b_ra_sin) * p_p_j_x[leg]
 		          + (t_p2b_ra_y * 0          * (1 - t_p2b_ra_cos) + t_p2b_ra_x * t_p2b_ra_sin) * p_p_j_y[leg];
 
-		debug("joint for base coord after rotation %f %f %f", p_b_j_x, p_b_j_y, p_b_j_z);
-
 		// translate by t_Z
 		p_b_j_z = p_b_j_z + t_p2b_t_z;
 
-		debug("joint in base coord %f %f %f", p_b_j_x, p_b_j_y, p_b_j_z);
 
 
 		// transform into servo coordinatesystem based on leg id
@@ -126,8 +119,6 @@ THREAD_ENTRY() {
 		p_s_j_x = p_s_j_x + t_b2s_t_x;
 		p_s_j_y = p_s_j_y + t_b2s_t_y;
 		p_s_j_z = p_s_j_z + t_b2s_t_z;
-
-		debug("joint in servo coord %f %f %f", p_s_j_x, p_s_j_y, p_s_j_z);
 
 
 		// find angle for leg length
@@ -152,11 +143,13 @@ THREAD_ENTRY() {
 			}
 		}
 
-		debug("angle %d with length diff %f", v_s_aj_l_mina, v_s_aj_l_min);
 #if 1
 		//printf("Demonstrator %d: Put data into servo mailbox, Leg %d \n", rb_info->demo_nr, leg);
-		if(rb_info->demo_nr == 0 && ((data >> 0) & 0x7)==0)
+		if((rb_info->demo_nr == 0) && ((data >> 0) & 0x7)==0)
 			a9timer_caputure(a9timer, &(log_sw_inverse.a9timer_capture), A9TIMER_CAPTURE_STOP);
+
+
+
 		switch(rb_info->demo_nr)
 		{
 			case 0: MBOX_PUT(servo_0_cmd, ((v_s_aj_l_mina << 21) | (leg << 18) | 0)); break;
@@ -165,6 +158,7 @@ THREAD_ENTRY() {
 			default: return; break;
 		}
 #else
+	printf("[SW Inverse] Write over AXI %x \n", rb_info->pServo);
 	((uint32_t*)(rb_info->pServo))[leg] = v_s_aj_l_mina;
 #endif
 

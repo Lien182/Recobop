@@ -73,9 +73,9 @@ THREAD_ENTRY() {
 	pos = (((uint32_t*)rb_info->pTouch)[1] & 0x00fff) | (((uint32_t*)rb_info->pTouch)[0] & 0x00fff )<< 12;
 #endif
 
-		uint32_t tmp = *(rb_info->timerregister);
-		printf("Demonstrator %d: Cycletime = %f , Waittime = %f \n",rb_info->demo_nr, (float)(tmp-time)/(float)100000000 * 1000.0f,(float)(tmp-waitstart)/(float)100000000 * 1000.0f  ); 
-		time = tmp;
+		//uint32_t tmp = *(rb_info->timerregister);
+		//printf("Demonstrator %d: Cycletime = %f , Waittime = %f \n",rb_info->demo_nr, (float)(tmp-time)/(float)100000000 * 1000.0f,(float)(tmp-waitstart)/(float)100000000 * 1000.0f  ); 
+		//time = tmp;
 
 		uint32_t wait = 30000.0;
 		

@@ -157,12 +157,15 @@ static inline float fitofl(uint32_t f, int n, int dn) {
 
 t_log log_sw_control;
 t_log log_sw_inverse;
+t_log log_sw_video;
+
 
 t_a9timer * a9timer;
 
 #else
 extern t_log log_sw_control;
 extern t_log log_sw_inverse;
+extern t_log log_sw_video;
 
 extern t_a9timer * a9timer;
 #endif /* RECOBOP_H */

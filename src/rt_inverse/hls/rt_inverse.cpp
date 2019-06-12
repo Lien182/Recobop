@@ -161,11 +161,14 @@ THREAD_ENTRY() {
 			}
 		}
 
-		//if(data(2, 0) == 0)
+		if(data(2,0) == 0)
 		{
-		//	debug_port->set(3);
-		//	ap_wait();
-		//	debug_port->clear(3);
+			#pragma HLS PROTOCOL fixed
+			*debug_port |= (1<<3);
+			ap_wait();
+			*debug_port &= ~(1<<3);
+			ap_wait();
+
 		}		
 
 		
@@ -178,12 +181,15 @@ THREAD_ENTRY() {
 			default: break;
 		}
 	
-		//if(data(2, 0) == 0)
+		if(data(2,0) == 0)
 		{
-			//debug_port->set(4);
-			//ap_wait();
-			//debug_port->clear(4);
-		}
+			#pragma HLS PROTOCOL fixed
+			*debug_port |= (1<<4);
+			ap_wait();
+			*debug_port &= ~(1<<4);
+			ap_wait();
+
+		}	
 		
 		
 	}

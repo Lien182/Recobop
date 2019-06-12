@@ -106,8 +106,8 @@ void hdmi_input_buffer_thread(t_hdmi_input * hdmi_input)
         buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         buf.memory = V4L2_MEMORY_MMAP;
         while(1)
-        {
-            LOOP:
+        {			
+LOOP:
             if (-1 == xioctl(hdmi_input->fd, VIDIOC_DQBUF, &buf)) {
                 switch (errno) {
                 case EAGAIN:
@@ -117,8 +117,6 @@ void hdmi_input_buffer_thread(t_hdmi_input * hdmi_input)
                 case EIO:
                         /* Could ignore EIO, see spec. */
 
-                        /* fall through */
-
                 default:
                         errno_exit("VIDIOC_DQBUF");
                 }
@@ -126,7 +124,7 @@ void hdmi_input_buffer_thread(t_hdmi_input * hdmi_input)
 
 
             MBOX_PUT(hdmi_input->mb, buffers[buf.index].start);
-			 MBOX_PUT(hdmi_input->mb, buffers[buf.index].start);
+	
             
             if (-1 == xioctl(hdmi_input->fd, VIDIOC_QBUF, &buf))
                     errno_exit("VIDIOC_QBUF");

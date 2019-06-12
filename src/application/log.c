@@ -85,7 +85,7 @@ uint32_t log_check_difference(t_log * log)
 		return 1;
 	}
 
-	if( cnt_1 != log->lasttimervalue )// && (cnt_1 > cnt_0 ))
+	if( cnt_1 != log->lasttimervalue && (cnt_1 > cnt_0 ))
 	{
 		if(log->mode & LOG_MODE_FILE)
 			fprintf(log->fd, "%08lld,\t %6.6f %s\n",log->samplecnt, (double)(cnt_1 - cnt_0)*log->scale, log->unit);

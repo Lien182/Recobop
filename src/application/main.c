@@ -96,10 +96,6 @@ uint32_t * servo_init(int fd, uint32_t base_addr)
 }
 
 
-
-
-
-
 int main(int argc, char **argv) {
 	int a, i;
 	int x, y;
@@ -118,6 +114,7 @@ int main(int argc, char **argv) {
 	t_log log_mailbox_0;
 	t_log log_a9timertest;
 	t_log log_hw_inverse;
+	t_log log_hw_control;
 
 	
 
@@ -133,25 +130,33 @@ int main(int argc, char **argv) {
 		printf("Error while allocating memory \n");
 		return -1;
 	}
-
+	//Init Measurement HW
 	a9timer = a9timer_init();
-
+	diff_timer_mailbox_0 = diff_timer_init(0x43C80000);
 	axi_timer_0 = axi_timer_init(0x42800000);
+
+
+/*
+	
 	axi_timer_start(axi_timer_0, TIMER_AXI_START_CHANNEL_0);
 	
 	axi_timer_demonstrator_0 = axi_timer_init(0x42810000);
 	log_init(&log_demonstrator_0, (void*)axi_timer_demonstrator_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_AXI_CHANNEL, "demonstrator_0.csv", 0.00001, "ms", 1000);
 	axi_timer_start(axi_timer_demonstrator_0, TIMER_AXI_START_CHANNEL_1);
 
-	diff_timer_mailbox_0 = diff_timer_init(0x43C80000);
+	
+
 	log_init(&log_mailbox_0, (void*)diff_timer_mailbox_0, LOG_CHANNEL_0, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "mailbox_0.csv", 0.00001, "ms", 1000);
 	
 	log_init(&log_a9timertest, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_CHANNEL | LOG_MODE_FILE | LOG_MODE_STDOUT, "a9test.csv", 0.00000333, "ms", 1000);
+*/	
+	log_init(&log_sw_inverse, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_DIFFERENCE | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_inverse.csv", 0.00000333, "ms", 100);
 	
-	log_init(&log_sw_control, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_DIFFERENCE | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_control.csv", 0.00000333, "ms", 1000);
-	log_init(&log_sw_inverse, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_DIFFERENCE | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_inverse.csv", 0.00000333, "ms", 1);
-	
-	log_init(&log_hw_inverse, (void*)diff_timer_mailbox_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "hw_inverse.csv", 0.00001, "ms", 1000);
+
+	//log_init(&log_hw_inverse, (void*)diff_timer_mailbox_0, LOG_CHANNEL_0, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "hw_inverse.csv", 0.00001, "ms", 100);
+	log_init(&log_hw_control, (void*)diff_timer_mailbox_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "hw_control.csv", 0.00001, "ms", 100);
+	//log_init(&log_sw_control, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_DIFFERENCE | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_control.csv", 0.00000333, "ms", 1000);
+	log_init(&log_sw_video, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_A9TIMER_DIFFERENCE, 	"sw_video.csv"	, 0.00000333, "ms", 100);
 
 
 	
@@ -202,7 +207,7 @@ int main(int argc, char **argv) {
 		
 		rb_info[i].thread_p[1] = reconos_thread_create_hwt_servo(  (void *)&(rb_info[i]));
 		rb_info[i].thread_p[2] = reconos_thread_create_swt_control((void *)&(rb_info[i]));
-		rb_info[i].thread_p[3] = reconos_thread_create_hwt_inverse((void *)&(rb_info[i]));
+		rb_info[i].thread_p[3] = reconos_thread_create_swt_inverse((void *)&(rb_info[i]));
 
 		
 
@@ -210,7 +215,7 @@ int main(int argc, char **argv) {
 		//rb_info[i].thread_p[4] = reconos_thread_create_hwt_touch(  (void *)&(rb_info[i]));
 
 	}
-	video_info.thread_p = reconos_thread_create_swt_video((void*)&video_info);
+	//video_info.thread_p = reconos_thread_create_swt_video((void*)&video_info);
 
 
 		

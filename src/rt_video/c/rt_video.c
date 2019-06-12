@@ -10,7 +10,13 @@
 #include <math.h>
 #include <stdio.h>
 
-/*
+#define COPY
+
+
+#ifdef COPY
+
+
+
  
 THREAD_ENTRY() {
 	t_video_info * video_info;
@@ -39,6 +45,8 @@ THREAD_ENTRY() {
 	{
 		image_in = (uint32_t*)MBOX_GET(video_cmd);
 		image_out = (uint32_t*)hdmi_output->image;
+
+		a9timer_caputure(a9timer, &(log_sw_video.a9timer_capture), A9TIMER_CAPTURE_START); 
 		
 		for(i = 0; i < 480; i++)
         {
@@ -53,13 +61,16 @@ THREAD_ENTRY() {
 			}
 			image_out+=(width-640);
 		}
+
+		a9timer_caputure(a9timer, &(log_sw_video.a9timer_capture), A9TIMER_CAPTURE_STOP);
 	}
 }
 
 
-*/
+#endif
 
 
+#ifdef SOBEL
  
 THREAD_ENTRY() {
 	t_video_info * video_info;
@@ -100,6 +111,7 @@ THREAD_ENTRY() {
 	{
 		image_in =  (uint8_t*)MBOX_GET(video_cmd);
 		image_out = (uint8_t*)hdmi_output->image;
+		a9timer_caputure(a9timer, &(log_sw_video.a9timer_capture), A9TIMER_CAPTURE_START); 
 		
 		for (i=y1; i<y2; i++) {
 			for (j=x1; j<x2; j++) {
@@ -134,10 +146,11 @@ THREAD_ENTRY() {
 			}
 		}
 
-		image_in =  (uint8_t*)MBOX_GET(video_cmd);
-
+		a9timer_caputure(a9timer, &(log_sw_video.a9timer_capture), A9TIMER_CAPTURE_STOP); 
 	}
 }
+
+#endif
 
 
 
