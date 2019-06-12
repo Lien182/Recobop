@@ -4,6 +4,8 @@
 #include "reconos.h"
 #include "log.h"
 #include "a9timer.h"
+#include "hdmi_input.h"
+#include "hdmi_output.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -18,6 +20,14 @@ struct recobop_info {
 	volatile int thread_count;
 	volatile struct reconos_thread *thread_p[16];
 }__attribute__((packed));
+
+
+typedef struct {
+	t_hdmi_input	hdmi_input;
+	t_hdmi_output 	hdmi_output;
+
+	volatile struct reconos_thread *thread_p;
+} t_video_info;
 
 
 static inline int rbi_thread_count_m(struct recobop_info *rb_info,

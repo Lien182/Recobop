@@ -42,6 +42,9 @@
 
 volatile struct recobop_info rb_info[3];
 
+volatile t_video_info video_info;
+
+
 inline double radians(double deg) {
 	return deg * (M_PI / 180.0);
 }
@@ -108,23 +111,15 @@ int main(int argc, char **argv) {
 
 	struct hwslot * hw;
 
-
-
-
 	t_axi_timer * axi_timer_0;
 	t_axi_timer * axi_timer_demonstrator_0;
-
 	t_diff_measurement * diff_timer_mailbox_0;
-
-	
-
-
 	t_log log_demonstrator_0;
 	t_log log_mailbox_0;
-
 	t_log log_a9timertest;
-
 	t_log log_hw_inverse;
+
+	
 
 
 	printf("Hello World\n");
@@ -158,7 +153,20 @@ int main(int argc, char **argv) {
 	
 	log_init(&log_hw_inverse, (void*)diff_timer_mailbox_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "hw_inverse.csv", 0.00001, "ms", 1000);
 
+
 	
+	
+	if(hdmi_output_init(&(video_info.hdmi_output), "/dev/fb0") != 0)
+	{
+		printf("HDMI Output: Init error \n");
+	}
+
+	if(hdmi_input_init(&(video_info.hdmi_input), "/dev/video0", video_cmd) != 0)
+	{
+		printf("HDMI Output: Init error \n");
+	}
+	
+
 	rb_info[0].pServo = (uint32_t*)servo_init(memfd, BOP_0_SERVO_BASE_ADDR);
 	rb_info[0].pTouch = (uint32_t*)touch_init(memfd, BOP_0_TOUCH_BASE_ADDR);
 	rb_info[0].demo_nr = 0UL;
@@ -202,6 +210,8 @@ int main(int argc, char **argv) {
 		//rb_info[i].thread_p[4] = reconos_thread_create_hwt_touch(  (void *)&(rb_info[i]));
 
 	}
+	video_info.thread_p = reconos_thread_create_swt_video((void*)&video_info);
+
 
 		
 		
