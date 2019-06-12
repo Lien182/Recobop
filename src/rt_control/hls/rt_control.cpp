@@ -25,7 +25,10 @@ static ap_fixed<22,12> average(ap_fixed<22,12> *data, int mc) {
 }
 
 THREAD_ENTRY() {
+	#pragma HLS INTERFACE ap_none port=debug_port
 	ap_uint<32> rb_info, demonstrator_nr;
+
+	*debug_port |= 1;
 
 	THREAD_INIT();
 	rb_info.range(31,0)  = GET_INIT_DATA();
@@ -39,10 +42,9 @@ THREAD_ENTRY() {
 
 
 	ap_uint<32> tmp = 1;		
-	MEM_WRITE(tmp, (uint32)(rb_info+36).range(31,0) , 4);
-	MEM_READ( (uint32)(rb_info+48).range(31,0),demonstrator_nr , 4);
+	MEM_READ( (uint32)(rb_info+8).range(31,0),demonstrator_nr , 4);
 
-	debug_port->range(3,2) = demonstrator_nr.range(1,0);
+	//debug_port->range(3,2) = demonstrator_nr.range(1,0);
 	while (1) {
 
 		ap_uint<32> pos;
@@ -139,8 +141,5 @@ THREAD_ENTRY() {
 			case 2: for (int i = 0; i < 6; i++) MBOX_PUT(inverse_2_cmd, (cmd_x, cmd_y, cmd_a, (ap_uint<3>)i)); break;
 			default: break;
 		}
-
-
-
 	}
 }

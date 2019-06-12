@@ -267,6 +267,7 @@ void reconos_thread_create_auto(struct reconos_thread *rt, int tt) {
 	if (tt & RECONOS_THREAD_HW) {
 		for (i = 0; i < rt->allowed_hwslot_count; i++) {
 			if (!rt->allowed_hwslots[i]->rt) {
+				printf("Allocated slot %d \n", rt->allowed_hwslots[i]->id);
 				break;
 			}
 		}

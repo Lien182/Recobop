@@ -123,14 +123,14 @@ begin
                      end if;
                         
                 when STATE_GET_SERVO_SINK => 
-                        memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 44), ret, done);
+                        memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 4), ret, done);
                         if done then
                              servo_base_addr <= unsigned(ret);
                              state <= STATE_GET_DEMONSTRATOR_NR;
                         end if;
 
 				when STATE_GET_DEMONSTRATOR_NR => 
-                        memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 48), ret, done);
+                        memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 8), ret, done);
                         if done then
                              demonstrator_nr <= unsigned(ret);
                              state <= STATE_CMD;

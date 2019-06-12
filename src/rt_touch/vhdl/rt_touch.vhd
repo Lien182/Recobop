@@ -110,14 +110,14 @@ begin
 
 				
 				when STATE_GET_DEMONSTRATOR_NR => 
-                        memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 48), ret, done);
+                        memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 8), ret, done);
                         if done then
                              demonstrator_nr <= unsigned(ret);
                              state <= STATE_GET_TOUCH_SOURCE;
                         end if;
 
                 when STATE_GET_TOUCH_SOURCE => 
-                    memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 40), ret, done);
+                    memif_read_word(i_memif, o_memif, std_logic_vector(rb_info), ret, done);
                     if done then
                         touch_base_addr <= unsigned(ret);
                         state <= STATE_READ_X_POS;

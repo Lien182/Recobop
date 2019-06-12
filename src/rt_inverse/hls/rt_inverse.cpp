@@ -39,39 +39,50 @@ ap_fixed<22,2> cos_lut[2048] = {1.00000000,0.99999848,0.99999391,0.99998629,0.99
 
 
 THREAD_ENTRY() {
-	ap_uint<32> rb_info, demonstrator_nr;
-	THREAD_INIT();
-	rb_info.range(31,0) = GET_INIT_DATA();
+
+	#pragma HLS INTERFACE ap_none port=debug_port
+
+	uint32 rb_info;
+	uint32 demonstrator_nr[1];
+	{
+		#pragma HLS PROTOCOL fixed
+		THREAD_INIT();
+		rb_info = GET_INIT_DATA();
+		MEM_READ( rb_info + 8, demonstrator_nr , 4);
+		*debug_port = 0;
+	}
 	
-
-	uint32 data[1] = {0};
-
-
-	MEM_READ( (uint32)(rb_info+48).range(31,0),demonstrator_nr , 4);
 
 	while (1) {
 
-		debug_port->range(31,30) = demonstrator_nr.range(1,0);
+		//debug_port->range(31,30) = demonstrator_nr[0];
 
 		ap_uint<32> data;
-		debug_port->range(1,1) = 0;
-		debug_port->range(0,0) = 1;
-		switch(demonstrator_nr)
+		//debug_port->range(1,1) = 0;
+		//debug_port->range(0,0) = 1;
+		
+		
+
+
+		switch(demonstrator_nr[0])
 		{
 			case 0: data.range(31,0) = MBOX_GET(inverse_0_cmd); break;
 			case 1: data.range(31,0) = MBOX_GET(inverse_1_cmd); break;
 			case 2: data.range(31,0) = MBOX_GET(inverse_2_cmd); break;
 			default: break;
 		}
-		debug_port->range(0,0) = 0;
-		debug_port->range(1,1) = 1;
-
-		if(data(2, 0) == 0)
+		
+		if(data(2,0) == 0)
 		{
-			debug_port->range(2,2) = 1;
+			#pragma HLS PROTOCOL fixed
+			*debug_port |= (1<<2);
 			ap_wait();
-			debug_port->range(2,2) = 0;
-		}	
+			*debug_port &= ~(1<<2);
+			ap_wait();
+
+		}
+
+		
 
 		ap_uint<10> cmd_x = data(31, 22);
 		ap_uint<10> cmd_y = data(21, 12);
@@ -150,16 +161,16 @@ THREAD_ENTRY() {
 			}
 		}
 
-		if(data(2, 0) == 0)
+		//if(data(2, 0) == 0)
 		{
-			debug_port->range(3,3) = 1;
-			ap_wait();
-			debug_port->range(3,3) = 0;
+		//	debug_port->set(3);
+		//	ap_wait();
+		//	debug_port->clear(3);
 		}		
 
 		
 		
-		switch(demonstrator_nr)
+		switch(demonstrator_nr[0])
 		{
 			case 0: MBOX_PUT(servo_0_cmd, (v_s_aj_l_mina, cmd_l, ap_uint<18>(0))); break;
 			case 1: MBOX_PUT(servo_1_cmd, (v_s_aj_l_mina, cmd_l, ap_uint<18>(0))); break;
@@ -167,11 +178,11 @@ THREAD_ENTRY() {
 			default: break;
 		}
 	
-		if(data(2, 0) == 0)
+		//if(data(2, 0) == 0)
 		{
-			debug_port->range(4,4) = 1;
-			ap_wait();
-			debug_port->range(4,4) = 0;
+			//debug_port->set(4);
+			//ap_wait();
+			//debug_port->clear(4);
 		}
 		
 		

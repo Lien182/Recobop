@@ -10,24 +10,10 @@
 #include <string.h>
 
 struct recobop_info {
-	volatile float saw_vin;				// +0
-	volatile float saw_vsense;			// +4
-	volatile float saw_power;			// +8
-	volatile uint32_t saw_pos;			// +12
-
-	volatile uint32_t ctrl_touch_wait;	// +16
-
-	volatile uint32_t perf_touch;		// +20
-	volatile uint32_t perf_control;		// +24
-	volatile uint32_t perf_inverse;		// +28
-	volatile uint32_t perf_all;			// +32
-
-	volatile uint32_t ctrl_angle;		// +36
-
-	volatile uint32_t* pTouch;			// +40
-	volatile uint32_t* pServo;			// +44
-	volatile uint32_t  demo_nr;			// +48
-	volatile uint32_t* timerregister;
+	volatile uint32_t* pTouch;			// +0
+	volatile uint32_t* pServo;			// +4
+	volatile uint32_t  demo_nr;			// +8
+	volatile uint32_t* timerregister;	// +12
 
 	volatile int thread_count;
 	volatile struct reconos_thread *thread_p[16];

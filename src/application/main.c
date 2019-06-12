@@ -106,6 +106,10 @@ int main(int argc, char **argv) {
 	char line[128];
 	struct reconos_thread *rt;
 
+	struct hwslot * hw;
+
+
+
 
 	t_axi_timer * axi_timer_0;
 	t_axi_timer * axi_timer_demonstrator_0;
@@ -155,15 +159,15 @@ int main(int argc, char **argv) {
 	log_init(&log_hw_inverse, (void*)diff_timer_mailbox_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "hw_inverse.csv", 0.00001, "ms", 1000);
 
 	
-	rb_info[0].pServo = (uint32_t)servo_init(memfd, BOP_0_SERVO_BASE_ADDR);
-	rb_info[0].pTouch = (uint32_t)touch_init(memfd, BOP_0_TOUCH_BASE_ADDR);
-	rb_info[0].demo_nr = 0;
-	rb_info[1].pServo = (uint32_t)servo_init(memfd, BOP_1_SERVO_BASE_ADDR);
-	rb_info[1].pTouch = (uint32_t)touch_init(memfd, BOP_1_TOUCH_BASE_ADDR);
-	rb_info[1].demo_nr = 1;
-	rb_info[2].pServo = (uint32_t)servo_init(memfd, BOP_2_SERVO_BASE_ADDR);
-	rb_info[2].pTouch = (uint32_t)touch_init(memfd, BOP_2_TOUCH_BASE_ADDR);
-	rb_info[2].demo_nr = 2;
+	rb_info[0].pServo = (uint32_t*)servo_init(memfd, BOP_0_SERVO_BASE_ADDR);
+	rb_info[0].pTouch = (uint32_t*)touch_init(memfd, BOP_0_TOUCH_BASE_ADDR);
+	rb_info[0].demo_nr = 0UL;
+	rb_info[1].pServo = (uint32_t*)servo_init(memfd, BOP_1_SERVO_BASE_ADDR);
+	rb_info[1].pTouch = (uint32_t*)touch_init(memfd, BOP_1_TOUCH_BASE_ADDR);
+	rb_info[1].demo_nr = 1UL;
+	rb_info[2].pServo = (uint32_t*)servo_init(memfd, BOP_2_SERVO_BASE_ADDR);
+	rb_info[2].pTouch = (uint32_t*)touch_init(memfd, BOP_2_TOUCH_BASE_ADDR);
+	rb_info[2].demo_nr = 2UL;
 	rb_info[0].timerregister = &(axi_timer_0->TCR0);
 	rb_info[1].timerregister = &(axi_timer_0->TCR0);
 	rb_info[2].timerregister = &(axi_timer_0->TCR0);
@@ -187,14 +191,19 @@ int main(int argc, char **argv) {
 	for(i = 0; i < 3; i++)
 	{
 		printf("Init Data on %x \n", (void *)&(rb_info[i]));
-		rb_info[i].ctrl_touch_wait = 1000000;
+		
 		rb_info[i].thread_p[1] = reconos_thread_create_hwt_servo(  (void *)&(rb_info[i]));
 		rb_info[i].thread_p[2] = reconos_thread_create_swt_control((void *)&(rb_info[i]));
 		rb_info[i].thread_p[3] = reconos_thread_create_hwt_inverse((void *)&(rb_info[i]));
+
+		
+
+	
 		//rb_info[i].thread_p[4] = reconos_thread_create_hwt_touch(  (void *)&(rb_info[i]));
 
 	}
 
+		
 		
 #if 0
 	int sum = 1000;
@@ -278,7 +287,7 @@ int main(int argc, char **argv) {
 		usleep(30000);
 		a9timer_caputure(a9timer, &(log_a9timertest.a9timer_capture), A9TIMER_CAPTURE_SINGLE);
 
-		printf("%x %x \n", diff_timer_mailbox_0->CAP2, diff_timer_mailbox_0->CAP3);
+		printf("%x %x %x %x %x \n",diff_timer_mailbox_0->CNT_REG, diff_timer_mailbox_0->CAP0, diff_timer_mailbox_0->CAP1, diff_timer_mailbox_0->CAP2, diff_timer_mailbox_0->CAP3);
 	}
 #endif
 
@@ -286,7 +295,7 @@ int main(int argc, char **argv) {
 		//printf("Touch data: 0: %x, 1: %x \n",((uint32_t*)rb_info[0].pTouch)[0] & 0x0fff,((uint32_t*)rb_info[0].pTouch)[1] & 0x0fff);
 		//sleep(1000000000);
 		
-		printf("CNT REG 0: %x, CNT REG 1: %x \n", diff_timer_mailbox_0->CAP0, diff_timer_mailbox_0->CAP1);
+		printf("CNT REG 0: %x, CNT REG 1: %x \n", diff_timer_mailbox_0->CNT_REG, diff_timer_mailbox_0->CAP0);
 		sleep(1);
 	}
 

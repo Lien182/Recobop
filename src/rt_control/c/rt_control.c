@@ -9,11 +9,13 @@
 #include <math.h>
 #include <stdio.h>
 
+
+
 #define KP -0.06
 #define KI -0.00000001
 //#define KI 0
 //#define KD -28
-#define KD -10 //SW 
+//#define KD -10 //SW 
 #define KD -12
 
 #define MC 16
@@ -184,9 +186,6 @@ THREAD_ENTRY() {
 		
 		
 #endif
-		
-		// saw
-		rb_info->ctrl_angle = len;
 
 	}
 }
