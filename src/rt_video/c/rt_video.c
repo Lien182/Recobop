@@ -102,7 +102,7 @@ THREAD_ENTRY() {
 		image_out = (uint8_t*)hdmi_output->image;
 		
 		for (i=y1; i<y2; i++) {
-			for (j=y2; j<x2; j++) {
+			for (j=x1; j<x2; j++) {
 				for(k=0; k < 4; k++) // k==3 is the alpha channel
 				{
 					if(k == 3) 
@@ -133,6 +133,8 @@ THREAD_ENTRY() {
 				}
 			}
 		}
+
+		image_in =  (uint8_t*)MBOX_GET(video_cmd);
 
 	}
 }

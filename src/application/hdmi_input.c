@@ -126,6 +126,7 @@ void hdmi_input_buffer_thread(t_hdmi_input * hdmi_input)
 
 
             MBOX_PUT(hdmi_input->mb, buffers[buf.index].start);
+			 MBOX_PUT(hdmi_input->mb, buffers[buf.index].start);
             
             if (-1 == xioctl(hdmi_input->fd, VIDIOC_QBUF, &buf))
                     errno_exit("VIDIOC_QBUF");
