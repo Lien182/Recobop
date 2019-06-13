@@ -39,7 +39,11 @@ THREAD_ENTRY() {
 	ap_int<12> p_p_b_x_last = 0, p_p_b_y_last = 0;
 
 	ap_fixed<22,12> error_x_diff_m[MC], error_y_diff_m[MC];
-
+	for(int i = 0; i < MC; i++)
+	{
+		error_x_diff_m[i] = 0;
+		error_y_diff_m[i] = 0;
+	}
 
 	ap_uint<32> tmp = 1;		
 	MEM_READ( (uint32)(rb_info+8).range(31,0),demonstrator_nr , 4);

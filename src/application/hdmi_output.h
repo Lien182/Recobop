@@ -14,9 +14,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <pthread.h>
-
-
-#include <linux/videodev2.h>
+#include <sys/ioctl.h>
 #include <linux/fb.h>
 
 typedef struct

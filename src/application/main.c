@@ -215,7 +215,8 @@ int main(int argc, char **argv) {
 		//rb_info[i].thread_p[4] = reconos_thread_create_hwt_touch(  (void *)&(rb_info[i]));
 
 	}
-	//video_info.thread_p = reconos_thread_create_swt_video((void*)&video_info);
+	printf("Image adress: %x \n", (uint32_t)(video_info.hdmi_output.image));
+	video_info.thread_p = reconos_thread_create_swt_video((uint32_t)(video_info.hdmi_output.image));
 
 
 		

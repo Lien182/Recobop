@@ -54,7 +54,7 @@ uint32_t log_check(t_log * log)
 
 uint32_t log_check_difference(t_log * log)
 {
-	uint32_t cnt_0, cnt_1;
+	uint32_t cnt_0 = 0, cnt_1 = 0;
 
 	if((log->mode & LOG_MODE_DIFFERENCE_UNIT) == LOG_MODE_DIFFERENCE_UNIT)
 	{

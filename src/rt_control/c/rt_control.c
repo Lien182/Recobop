@@ -50,6 +50,12 @@ THREAD_ENTRY() {
 	int p_p_b_x_last = 0, p_p_b_y_last = 0;
 
 	float error_x_diff_m[MC], error_y_diff_m[MC];
+	
+	for(i = 0; i < MC; i++)
+	{
+		error_x_diff_m[i] = 0.0f;
+		error_y_diff_m[i] = 0.0f;
+	}
 
 	float dd = 0;
 	int target_x, target_y;

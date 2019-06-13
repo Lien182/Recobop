@@ -19,7 +19,7 @@ uint32_t hdmi_output_init(t_hdmi_output * hdmi_output, char * device  )
 
 	bitspp = screeninfo.bits_per_pixel;
 	if(bitspp != 32) {
-		printf("[HMDI output] Wrong color resolution\n", bitspp);
+		printf("[HMDI output] Wrong color resolution\n");
 		close(hdmi_output->fd_fb);
 		return -2; 
 	}
