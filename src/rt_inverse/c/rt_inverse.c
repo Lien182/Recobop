@@ -145,8 +145,8 @@ THREAD_ENTRY() {
 
 #if 1
 		//printf("Demonstrator %d: Put data into servo mailbox, Leg %d \n", rb_info->demo_nr, leg);
-		if((rb_info->demo_nr == 0) && ((data >> 0) & 0x7)==0)
-			a9timer_caputure(a9timer, &(log_sw_inverse.a9timer_capture), A9TIMER_CAPTURE_STOP);
+		//if((rb_info->demo_nr == 0) && ((data >> 0) & 0x7)==0)
+		//	a9timer_caputure(a9timer, &(log_sw_inverse.a9timer_capture), A9TIMER_CAPTURE_STOP);
 
 
 

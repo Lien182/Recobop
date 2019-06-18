@@ -249,7 +249,7 @@ void reconos_thread_create(struct reconos_thread *rt, int slot);
  *   tt - software or hardware thread
  *
  */
-void reconos_thread_create_auto(struct reconos_thread *rt, int tt);
+void reconos_thread_create_auto(struct reconos_thread *rt, int tt, int sched_prio );
 
 /*
  * Suspends the ReconOS thread by saving its state and pausing execution.

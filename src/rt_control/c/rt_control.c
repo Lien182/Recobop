@@ -178,8 +178,8 @@ THREAD_ENTRY() {
 		uint32_t cmd_y = fltofi(t_p2b_ra_y, 10, 2);
 		uint32_t cmd_a = len;
 
-		if(rb_info->demo_nr == 0)
-			a9timer_caputure(a9timer, &(log_sw_control.a9timer_capture), A9TIMER_CAPTURE_STOP);
+		//if(rb_info->demo_nr == 0)
+		//	a9timer_caputure(a9timer, &(log_sw_control.a9timer_capture), A9TIMER_CAPTURE_STOP);
 #if 1	
 		switch(rb_info->demo_nr)
 		{

@@ -122,7 +122,7 @@ begin
 							rb_info <= unsigned(ret);
 							state <= STATE_GET_SERVO_SINK;
 						else
-							state <= STATE_GET_SERVO_SINK;
+							state <= STATE_INIT_DATA;
 						end if;
                      end if;
                         

@@ -36,6 +36,7 @@
 #define BOP_2_SERVO_BASE_ADDR 0x43C60000
 
 #define AXI_TIMER_0_ADDR	0x42800000
+#define AXI_TIMER_1_ADDR	0x42810000
 
 
 
@@ -108,6 +109,7 @@ int main(int argc, char **argv) {
 	struct hwslot * hw;
 
 	t_axi_timer * axi_timer_0;
+	t_axi_timer * axi_timer_1;
 	t_axi_timer * axi_timer_demonstrator_0;
 	t_diff_measurement * diff_timer_mailbox_0;
 	t_log log_demonstrator_0;
@@ -133,8 +135,8 @@ int main(int argc, char **argv) {
 	//Init Measurement HW
 	a9timer = a9timer_init();
 	diff_timer_mailbox_0 = diff_timer_init(0x43C80000);
-	axi_timer_0 = axi_timer_init(0x42800000);
-
+	axi_timer_0 = axi_timer_init(AXI_TIMER_0_ADDR);
+	axi_timer_1 = axi_timer_init(AXI_TIMER_1_ADDR);
 
 /*
 	
@@ -150,13 +152,14 @@ int main(int argc, char **argv) {
 	
 	log_init(&log_a9timertest, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_CHANNEL | LOG_MODE_FILE | LOG_MODE_STDOUT, "a9test.csv", 0.00000333, "ms", 1000);
 */	
-	log_init(&log_sw_inverse, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_DIFFERENCE | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_inverse.csv", 0.00000333, "ms", 100);
+	log_init(&log_sw_control, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_CHANNEL | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_control.csv", 0.00000333, "ms", 100);
+	log_init(&log_sw_inverse, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_CHANNEL | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_inverse.csv", 0.00000333, "ms", 100);
 	
 
 	//log_init(&log_hw_inverse, (void*)diff_timer_mailbox_0, LOG_CHANNEL_0, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "hw_inverse.csv", 0.00001, "ms", 100);
-	log_init(&log_hw_control, (void*)diff_timer_mailbox_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "hw_control.csv", 0.00001, "ms", 100);
+	//log_init(&log_hw_control, (void*)diff_timer_mailbox_0, LOG_CHANNEL_1, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "hw_control.csv", 0.00001, "ms", 100);
 	//log_init(&log_sw_control, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_DIFFERENCE | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_control.csv", 0.00000333, "ms", 1000);
-	log_init(&log_sw_video, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_A9TIMER_DIFFERENCE, 	"sw_video.csv"	, 0.00000333, "ms", 100);
+	//log_init(&log_sw_video, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_A9TIMER_DIFFERENCE, 	"sw_video.csv"	, 0.00000333, "ms", 100);
 
 
 	
@@ -171,6 +174,9 @@ int main(int argc, char **argv) {
 		printf("HDMI Output: Init error \n");
 	}
 	
+
+	axi_timer_start(axi_timer_1, TIMER_AXI_START_CHANNEL_0, TIMER_AXI_MODE_GENERATE, 3000000);
+
 
 	rb_info[0].pServo = (uint32_t*)servo_init(memfd, BOP_0_SERVO_BASE_ADDR);
 	rb_info[0].pTouch = (uint32_t*)touch_init(memfd, BOP_0_TOUCH_BASE_ADDR);
@@ -208,11 +214,7 @@ int main(int argc, char **argv) {
 		rb_info[i].thread_p[1] = reconos_thread_create_hwt_servo(  (void *)&(rb_info[i]));
 		rb_info[i].thread_p[2] = reconos_thread_create_swt_control((void *)&(rb_info[i]));
 		rb_info[i].thread_p[3] = reconos_thread_create_swt_inverse((void *)&(rb_info[i]));
-
-		
-
-	
-		//rb_info[i].thread_p[4] = reconos_thread_create_hwt_touch(  (void *)&(rb_info[i]));
+		rb_info[i].thread_p[4] = reconos_thread_create_hwt_touch(  (void *)&(rb_info[i]));
 
 	}
 	printf("Image adress: %x \n", (uint32_t)(video_info.hdmi_output.image));
@@ -283,7 +285,7 @@ int main(int argc, char **argv) {
 
 
 
-#if 1
+#if 0
 	printf("Testing control algorithm ...\n");
 	for (a = 0; a < 10000000; a+=1) {
 		x = cos(a * M_PI / 180) * 1000;
@@ -311,7 +313,7 @@ int main(int argc, char **argv) {
 		//printf("Touch data: 0: %x, 1: %x \n",((uint32_t*)rb_info[0].pTouch)[0] & 0x0fff,((uint32_t*)rb_info[0].pTouch)[1] & 0x0fff);
 		//sleep(1000000000);
 		
-		printf("CNT REG 0: %x, CNT REG 1: %x \n", diff_timer_mailbox_0->CNT_REG, diff_timer_mailbox_0->CAP0);
+		printf("CNT REG 0: %x, CNT REG 1: %x \n", axi_timer_1->TCR0, axi_timer_1->TLR0);
 		sleep(1);
 	}
 

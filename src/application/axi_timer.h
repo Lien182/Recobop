@@ -27,6 +27,8 @@
 #define TIMER_AXI_START_CHANNEL_0	0x00000001
 #define TIMER_AXI_START_CHANNEL_1	0x00000002
 
+#define TIMER_AXI_MODE_CAPTURE		0x00000000
+#define TIMER_AXI_MODE_GENERATE		0x00000001
 
 typedef struct
 {
@@ -44,7 +46,7 @@ typedef struct
 
 
 t_axi_timer * axi_timer_init( uint32_t base_addr);
-void axi_timer_start(t_axi_timer * axi_timer,uint32_t channel );
+void axi_timer_start(t_axi_timer * axi_timer,uint32_t channel, uint32_t mode, uint32_t interval );
 void axi_timer_stop(t_axi_timer * axi_timer, uint32_t channel);
 
 
