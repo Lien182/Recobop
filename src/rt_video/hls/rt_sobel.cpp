@@ -66,7 +66,7 @@ THREAD_ENTRY()
 				filter_pointer = 0;
 				for(ii=-1; ii < 2; ii++)
 				{
-					for(jj=-1; jj < 2; jj++)
+					for(jj=-1; jj < 2; jj++)  
 					{		
 						uint32 buffer_pointer = ((INPUT_WIDTH*((i+ii)&3)+(j+jj)));
 						uint32 actindata  = 	input_linebuffer[buffer_pointer];	

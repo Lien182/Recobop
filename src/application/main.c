@@ -212,13 +212,13 @@ int main(int argc, char **argv) {
 		printf("Init Data on %x \n", (void *)&(rb_info[i]));
 		
 		rb_info[i].thread_p[1] = reconos_thread_create_hwt_servo(  (void *)&(rb_info[i]));
-		rb_info[i].thread_p[2] = reconos_thread_create_swt_control((void *)&(rb_info[i]));
-		rb_info[i].thread_p[3] = reconos_thread_create_swt_inverse((void *)&(rb_info[i]));
+		rb_info[i].thread_p[2] = reconos_thread_create_swt_control((void *)&(rb_info[i]), 69);
+		rb_info[i].thread_p[3] = reconos_thread_create_swt_inverse((void *)&(rb_info[i]), 70);
 		rb_info[i].thread_p[4] = reconos_thread_create_hwt_touch(  (void *)&(rb_info[i]));
 
 	}
 	printf("Image adress: %x \n", (uint32_t)(video_info.hdmi_output.image));
-	video_info.thread_p = reconos_thread_create_swt_video((uint32_t)(video_info.hdmi_output.image));
+	video_info.thread_p = reconos_thread_create_swt_video((uint32_t)(video_info.hdmi_output.image), 0);
 
 
 		
