@@ -104,6 +104,9 @@ uint32_t log_check_difference(t_log * log)
 
 void log_deinit(t_log * log)
 {
+	log->bStop = 1;
+	printf("LOG: Wait for exiting thread.. \n");
+	pthread_join(log->thread, NULL);
 	fclose(log->fd);
 }
 

@@ -218,7 +218,7 @@ int main(int argc, char **argv) {
 
 	}
 	printf("Image adress: %x \n", (uint32_t)(video_info.hdmi_output.image));
-	video_info.thread_p = reconos_thread_create_swt_video((uint32_t)(video_info.hdmi_output.image), 0);
+	video_info.thread_p = reconos_thread_create_hwt_sobel((uint32_t)(video_info.hdmi_output.image));
 
 
 		

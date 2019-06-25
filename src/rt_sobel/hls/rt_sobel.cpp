@@ -36,7 +36,14 @@ THREAD_ENTRY()
 
 	while (1)
 	{
-		uint32 address = MBOX_GET(video_cmd); //address in BYTE
+		uint32 address;
+		uint32 status = 0;
+
+		while(status != 1)
+		{
+			status = MBOX_TRYGET(video_cmd, address);
+		}	
+			
 		if(address != 0)
 		{
 			#pragma HLS PROTOCOL fixed
