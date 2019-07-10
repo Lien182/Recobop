@@ -1,4 +1,3 @@
-
 #include "recobop.h"
 
 #include "reconos_thread.h"
@@ -40,13 +39,16 @@ int c_arm = 20;
 #define TRIG_MIN_ANGLE_DEG 0
 #define TRIG_MAX_ANGLE_DEG 204.7
 #define TRIG_STEP 0.1
+
+#define DEBUG 0
+
 static inline float radians(float deg) {
 	return deg * (M_PI / 180.0);
 }
-static inline float sin_lut(unsigned int a) {
+static inline float sin_lut(float a) {
 	return sin(radians(a * TRIG_STEP));
 }
-static inline float cos_lut(unsigned int a) {
+static inline float cos_lut(float a) {
 	return cos(radians(a * TRIG_STEP));
 }
 
@@ -73,13 +75,20 @@ THREAD_ENTRY() {
 			case 2: data = MBOX_GET(inverse_2_cmd); break;
 			default: printf("ERROR: Wrong demonstrator number!!\n");return; break;
 		}
-		if((rb_info->demo_nr == 0) && ((data >> 0) & 0x7)==0)
-			a9timer_caputure(a9timer, &(log_sw_inverse.a9timer_capture), A9TIMER_CAPTURE_START);
 
-		float t_p2b_ra_x = fitofl((data >> 22) & 0x3ff, 10, 2);
-		float t_p2b_ra_y = fitofl((data >> 12) & 0x3ff, 10, 2);
-		float t_p2b_ra_sin = sin_lut((data >> 3) & 0x1ff);
-		float t_p2b_ra_cos = cos_lut((data >> 3) & 0x1ff);
+		float t_p2b_alpha = fitofl((data >> 17) & 0x3fff, 14, 6);
+		float t_p2b_beta  = fitofl((data >> 3) & 0x3fff, 14, 6);
+#if DEBUG == 1
+		printf("[Inverse] alpha %f, beta %f \n", t_p2b_alpha, t_p2b_beta);
+#endif
+		float t_p2b_alpha_sin = sin_lut(t_p2b_alpha * 10.0f);
+		float t_p2b_alpha_cos = cos_lut(t_p2b_alpha * 10.0f);
+		float t_p2b_beta_sin  = sin_lut(t_p2b_beta  * 10.0f);
+		float t_p2b_beta_cos  = cos_lut(t_p2b_beta  * 10.0f);
+#if DEBUG == 1
+		printf("[Inverse] t_p2b_alpha_sin %f, t_p2b_alpha_cos %f, t_p2b_beta_sin %f, t_p2b_beta_cos %f \n", t_p2b_alpha_sin, t_p2b_alpha_cos, t_p2b_beta_sin, t_p2b_beta_cos);
+#endif
+
 		int leg = (data >> 0) & 0x7;
 
 		float p_b_j_x, p_b_j_y, p_b_j_z;
@@ -92,17 +101,18 @@ THREAD_ENTRY() {
 
 		// transform into base coordinatesystem
 		// rotate around ra_x, ra_y, ra_z by ra_sin/ra_cos
-		p_b_j_x =   (t_p2b_ra_x * t_p2b_ra_x * (1 - t_p2b_ra_cos) + 1          * t_p2b_ra_cos) * p_p_j_x[leg]
-		          + (t_p2b_ra_x * t_p2b_ra_y * (1 - t_p2b_ra_cos) - 0          * t_p2b_ra_sin) * p_p_j_y[leg];
-		p_b_j_y =   (t_p2b_ra_x * t_p2b_ra_y * (1 - t_p2b_ra_cos) + 0          * t_p2b_ra_sin) * p_p_j_x[leg]
-		          + (t_p2b_ra_y * t_p2b_ra_y * (1 - t_p2b_ra_cos) + 1          * t_p2b_ra_cos) * p_p_j_y[leg];
-		p_b_j_z =   (t_p2b_ra_x * 0          * (1 - t_p2b_ra_cos) - t_p2b_ra_y * t_p2b_ra_sin) * p_p_j_x[leg]
-		          + (t_p2b_ra_y * 0          * (1 - t_p2b_ra_cos) + t_p2b_ra_x * t_p2b_ra_sin) * p_p_j_y[leg];
+		p_b_j_x =  	 t_p2b_beta_cos * p_p_j_x[leg];
 
+		p_b_j_y =    t_p2b_alpha_sin * t_p2b_beta_sin * p_p_j_x[leg] 
+				  +  t_p2b_alpha_cos * p_p_j_y[leg]; 
+
+		p_b_j_z =   -t_p2b_alpha_cos * t_p2b_beta_sin * p_p_j_x[leg] 
+				  +  t_p2b_alpha_sin * p_p_j_y[leg];
+#if DEBUG == 1
+		printf("[Inverse] p_b_j_x %f, p_b_j_y %f, p_b_j_z %f \n", p_b_j_x, p_b_j_y,p_b_j_z);
+#endif
 		// translate by t_Z
 		p_b_j_z = p_b_j_z + t_p2b_t_z;
-
-
 
 		// transform into servo coordinatesystem based on leg id
 		// rotate around z axis by rz_sin/rz_cos
@@ -143,24 +153,7 @@ THREAD_ENTRY() {
 			}
 		}
 
-#if 1
-		//printf("Demonstrator %d: Put data into servo mailbox, Leg %d \n", rb_info->demo_nr, leg);
-		//if((rb_info->demo_nr == 0) && ((data >> 0) & 0x7)==0)
-		//	a9timer_caputure(a9timer, &(log_sw_inverse.a9timer_capture), A9TIMER_CAPTURE_STOP);
-
-
-
-		switch(rb_info->demo_nr)
-		{
-			case 0: MBOX_PUT(servo_0_cmd, ((v_s_aj_l_mina << 21) | (leg << 18) | 0)); break;
-			case 1: MBOX_PUT(servo_1_cmd, ((v_s_aj_l_mina << 21) | (leg << 18) | 0)); break;
-			case 2: MBOX_PUT(servo_2_cmd, ((v_s_aj_l_mina << 21) | (leg << 18) | 0)); break;
-			default: return; break;
-		}
-#else
-	printf("[SW Inverse] Write over AXI %x \n", rb_info->pServo);
 	((uint32_t*)(rb_info->pServo))[leg] = v_s_aj_l_mina;
-#endif
 
 	}
 }

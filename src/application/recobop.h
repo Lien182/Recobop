@@ -6,10 +6,13 @@
 #include "a9timer.h"
 #include "hdmi_input.h"
 #include "hdmi_output.h"
+#include "cycle_timer.h"
 
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
+
+t_cycle_timer cycle_timer;
 
 struct recobop_info {
 	volatile uint32_t* pTouch;			// +0
@@ -19,7 +22,8 @@ struct recobop_info {
 
 	volatile int thread_count;
 	volatile struct reconos_thread *thread_p[16];
-}__attribute__((packed));
+	
+};
 
 
 typedef struct {
@@ -27,6 +31,7 @@ typedef struct {
 	t_hdmi_output 	hdmi_output;
 
 	volatile struct reconos_thread *thread_p;
+
 } t_video_info;
 
 
@@ -168,4 +173,6 @@ extern t_log log_sw_inverse;
 extern t_log log_sw_video;
 
 extern t_a9timer * a9timer;
+
+extern t_cycletimer cycle_timer;
 #endif /* RECOBOP_H */

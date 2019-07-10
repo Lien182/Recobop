@@ -23,6 +23,7 @@
 #include "a9timer.h"
 #include "difference_measurement.h"
 #include "memory.h"
+#include "cycle_timer.h"
 
 
 #define MAX_ANGLE 60
@@ -117,8 +118,12 @@ int main(int argc, char **argv) {
 	t_log log_a9timertest;
 	t_log log_hw_inverse;
 	t_log log_hw_control;
+	t_log log_touch_ctrl;
 
-	
+	int32_t touch_x_old , touch_x;
+
+	int x_pos, y_pos;
+	uint32_t cyclecnt = 0;
 
 
 	printf("Hello World\n");
@@ -132,6 +137,9 @@ int main(int argc, char **argv) {
 		printf("Error while allocating memory \n");
 		return -1;
 	}
+
+	cycle_timer_init(&cycle_timer, 20);
+
 	//Init Measurement HW
 	a9timer = a9timer_init();
 	diff_timer_mailbox_0 = diff_timer_init(0x43C80000);
@@ -152,8 +160,10 @@ int main(int argc, char **argv) {
 	
 	log_init(&log_a9timertest, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_CHANNEL | LOG_MODE_FILE | LOG_MODE_STDOUT, "a9test.csv", 0.00000333, "ms", 1000);
 */	
-	log_init(&log_sw_control, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_CHANNEL | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_control.csv", 0.00000333, "ms", 100);
-	log_init(&log_sw_inverse, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_CHANNEL | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_inverse.csv", 0.00000333, "ms", 100);
+	//log_init(&log_sw_control, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_CHANNEL | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_control.csv", 0.00000333, "ms", 100);
+	//log_init(&log_sw_inverse, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_CHANNEL | LOG_MODE_FILE | LOG_MODE_STDOUT, "sw_inverse.csv", 0.00000333, "ms", 100);
+	
+	//log_init(&log_touch_ctrl, (void*)a9timer, LOG_CHANNEL_0, LOG_MODE_A9TIMER_CHANNEL | LOG_MODE_FILE | LOG_MODE_STDOUT, "log_touch_ctrl.csv", 0.00000333, "ms", 10);
 	
 
 	//log_init(&log_hw_inverse, (void*)diff_timer_mailbox_0, LOG_CHANNEL_0, LOG_MODE_STDOUT | LOG_MODE_FILE | LOG_MODE_DIFFERENCE_UNIT, "hw_inverse.csv", 0.00001, "ms", 100);
@@ -163,7 +173,7 @@ int main(int argc, char **argv) {
 
 
 	
-	
+	/*
 	if(hdmi_output_init(&(video_info.hdmi_output), "/dev/fb0") != 0)
 	{
 		printf("HDMI Output: Init error \n");
@@ -173,7 +183,7 @@ int main(int argc, char **argv) {
 	{
 		printf("HDMI Output: Init error \n");
 	}
-	
+	*/
 
 	axi_timer_start(axi_timer_1, TIMER_AXI_START_CHANNEL_0, TIMER_AXI_MODE_GENERATE, 3000000);
 
@@ -207,19 +217,21 @@ int main(int argc, char **argv) {
 
 	printf("Initializing Info\n");
 	sleep(1);
-	for(i = 0; i < 3; i++)
+	for(i = 2; i < 3; i++)
 	{
 		printf("Init Data on %x \n", (void *)&(rb_info[i]));
 		
-		rb_info[i].thread_p[1] = reconos_thread_create_hwt_servo(  (void *)&(rb_info[i]));
-		rb_info[i].thread_p[2] = reconos_thread_create_swt_control((void *)&(rb_info[i]), 69);
-		rb_info[i].thread_p[3] = reconos_thread_create_swt_inverse((void *)&(rb_info[i]), 70);
-		rb_info[i].thread_p[4] = reconos_thread_create_hwt_touch(  (void *)&(rb_info[i]));
+		//rb_info[i].thread_p[1] = reconos_thread_create_hwt_servo(  (void *)&(rb_info[i]));
+		rb_info[i].thread_p[2] = reconos_thread_create_swt_control((void *)&(rb_info[i]), 70);
+		rb_info[i].thread_p[3] = reconos_thread_create_swt_inverse((void *)&(rb_info[i]), 69);
+		//rb_info[i].thread_p[4] = reconos_thread_create_hwt_touch(  (void *)&(rb_info[i]));
 
 	}
 	printf("Image adress: %x \n", (uint32_t)(video_info.hdmi_output.image));
-	video_info.thread_p = reconos_thread_create_hwt_sobel((uint32_t)(video_info.hdmi_output.image));
+	//video_info.thread_p = reconos_thread_create_hwt_sobel((uint32_t)(video_info.hdmi_output.image));
 
+
+	
 
 		
 		
@@ -293,28 +305,49 @@ int main(int argc, char **argv) {
 		
 		printf("Mailbox 0\n");
 		mbox_put(touch_0_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
-		printf("Mailbox 1\n");
-		mbox_put(touch_1_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
-		printf("Mailbox 2\n");
-		mbox_put(touch_2_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
+	//	printf("Mailbox 1\n");
+	//	mbox_put(touch_1_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
+	//	printf("Mailbox 2\n");
+	//	mbox_put(touch_2_pos, 0 | (x & 0xfff) << 12 | (y & 0xfff) << 0);
 		
 		//printf("0: Servo data: 0: %x, 1: %x \n",((uint32_t*)rb_info[0].pServo)[0] & 0x0fff,((uint32_t*)rb_info[0].pServo)[1] & 0x0fff);
 		
 		
 		//mbox_put(touch_pos, 1000000);
-		usleep(30000);
-		a9timer_caputure(a9timer, &(log_a9timertest.a9timer_capture), A9TIMER_CAPTURE_SINGLE);
+		usleep(10000);
+	//	a9timer_caputure(a9timer, &(log_a9timertest.a9timer_capture), A9TIMER_CAPTURE_SINGLE);
 
-		printf("%x %x %x %x %x \n",diff_timer_mailbox_0->CNT_REG, diff_timer_mailbox_0->CAP0, diff_timer_mailbox_0->CAP1, diff_timer_mailbox_0->CAP2, diff_timer_mailbox_0->CAP3);
+	//	printf("%x %x %x %x %x \n",diff_timer_mailbox_0->CNT_REG, diff_timer_mailbox_0->CAP0, diff_timer_mailbox_0->CAP1, diff_timer_mailbox_0->CAP2, diff_timer_mailbox_0->CAP3);
 	}
 #endif
 
 	while(1) {
-		//printf("Touch data: 0: %x, 1: %x \n",((uint32_t*)rb_info[0].pTouch)[0] & 0x0fff,((uint32_t*)rb_info[0].pTouch)[1] & 0x0fff);
+
+		x_pos = ((int32_t*)rb_info[0].pTouch)[0] & 0x0fff;
+	
+		if(x_pos & 0x0800)
+			x_pos |= 0xfffff000;
+		y_pos = ((int32_t*)rb_info[0].pTouch)[1] & 0x0fff;
+		if(y_pos & 0x0800)
+			y_pos |= 0xfffff000;
+
+		cyclecnt = ((int32_t*)rb_info[0].pTouch)[0] >> 12;
+		//printf("1 Touch data: 0:%8d, 1:%8d, CycleCnt %8d\n",x_pos,y_pos, cyclecnt);
+		
+		touch_x = ((uint32_t*)rb_info[0].pTouch)[0];
+
+		//if(touch_x_old != touch_x)
+			//a9timer_caputure(a9timer, &(log_touch_ctrl.a9timer_capture), A9TIMER_CAPTURE_START); 
+
+
+		touch_x_old = touch_x;
+		
+		//printf("2 Touch data: 0: %x, 1: %x \n",((uint32_t*)rb_info[1].pTouch)[0] & 0x0fff,((uint32_t*)rb_info[1].pTouch)[1] & 0x0fff);
+		//printf("3 Touch data: 0: %x, 1: %x \n",((uint32_t*)rb_info[2].pTouch)[0] & 0x0fff,((uint32_t*)rb_info[2].pTouch)[1] & 0x0fff);
 		//sleep(1000000000);
 		
-		printf("CNT REG 0: %x, CNT REG 1: %x \n", axi_timer_1->TCR0, axi_timer_1->TLR0);
-		sleep(1);
+		//printf("CNT REG 0: %x, CNT REG 1: %x \n", axi_timer_1->TCR0, axi_timer_1->TLR0);
+		usleep(10000);
 	}
 
 	reconos_cleanup();
