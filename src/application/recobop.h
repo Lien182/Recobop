@@ -19,7 +19,7 @@ struct recobop_info {
 	volatile uint32_t* pServo;			// +4
 	volatile uint32_t  demo_nr;			// +8
 	volatile uint32_t* timerregister;	// +12
-
+	volatile uint32_t* stackaddr;		// +16
 	volatile int thread_count;
 	volatile struct reconos_thread *thread_p[16];
 	

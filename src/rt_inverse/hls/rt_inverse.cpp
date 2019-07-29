@@ -61,9 +61,6 @@ THREAD_ENTRY() {
 		//debug_port->range(1,1) = 0;
 		//debug_port->range(0,0) = 1;
 		
-		
-
-
 		switch(demonstrator_nr[0])
 		{
 			case 0: data.range(31,0) = MBOX_GET(inverse_0_cmd); break;
@@ -82,22 +79,53 @@ THREAD_ENTRY() {
 
 		}
 
+	
+		ap_int<16> cmd_alpha = data(30, 17);
+		ap_int<16> cmd_beta  = data(16, 3);
+		ap_uint<3>  cmd_l     = data(2, 0);
+
+		if(data(30,30) == 1)
+			cmd_alpha |= 0xC000;
+
+		if(data(16,16) == 1)
+			cmd_beta |= 0xC000;
+
+		cmd_alpha *= 10;
+		cmd_beta  *= 10;
+
+		ap_fixed<22,2> t_p2b_alpha_sin; 
+		ap_fixed<22,2> t_p2b_alpha_cos;
+		ap_fixed<22,2> t_p2b_beta_sin;
+		ap_fixed<22,2> t_p2b_beta_cos;
+
+		if(data(30,30) == 1)
+		{
+			cmd_alpha *= -1;
+			t_p2b_alpha_sin = -sin_lut[cmd_alpha >> 8];
+			t_p2b_alpha_cos =  cos_lut[cmd_alpha >> 8];
+		}
+		else
+		{
+			
+			t_p2b_alpha_sin = sin_lut[cmd_alpha >> 8];
+			t_p2b_alpha_cos = cos_lut[cmd_alpha >> 8];
+		}
+		
+		if(data(16,16) == 1)
+		{
+			cmd_beta *= -1;
+			t_p2b_beta_sin = -sin_lut[cmd_beta >> 8];
+			t_p2b_beta_cos =  cos_lut[cmd_beta >> 8];
+		}
+		else
+		{		
+			t_p2b_beta_sin  = sin_lut[cmd_beta  >> 8];
+			t_p2b_beta_cos  = cos_lut[cmd_beta  >> 8];
+		}
+		
 		
 
-		ap_uint<10> cmd_x = data(31, 22);
-		ap_uint<10> cmd_y = data(21, 12);
-		ap_uint<9>  cmd_a = data(11, 3);
-		ap_uint<3>  cmd_l = data(2, 0);
 
-		ap_fixed<10,2> t_p2b_ra_x, t_p2b_ra_y;
-		// ugly workaround for bit selection
-		for (int i = 0; i < 10; i++) {
-			t_p2b_ra_x[i] = cmd_x[i];
-			t_p2b_ra_y[i] = cmd_y[i];
-		}
-
-		ap_fixed<22,2> t_p2b_ra_sin = sin_lut[cmd_a];
-		ap_fixed<22,2> t_p2b_ra_cos = cos_lut[cmd_a];
 
 		int leg = cmd_l;
 
@@ -109,15 +137,13 @@ THREAD_ENTRY() {
 		ap_uint<TRIG_ADDR> v_s_aj_l_mina;
 
 
-		// transform into base coordinatesystem
-		// rotate around ra_x, ra_y, ra_z by ra_sin/ra_cos
-		p_b_j_x =   (t_p2b_ra_x * t_p2b_ra_x * (1 - t_p2b_ra_cos) + 1          * t_p2b_ra_cos) * p_p_j_x[leg]
-		          + (t_p2b_ra_x * t_p2b_ra_y * (1 - t_p2b_ra_cos) - 0          * t_p2b_ra_sin) * p_p_j_y[leg];
-		p_b_j_y =   (t_p2b_ra_x * t_p2b_ra_y * (1 - t_p2b_ra_cos) + 0          * t_p2b_ra_sin) * p_p_j_x[leg]
-		          + (t_p2b_ra_y * t_p2b_ra_y * (1 - t_p2b_ra_cos) + 1          * t_p2b_ra_cos) * p_p_j_y[leg];
-		p_b_j_z =   (t_p2b_ra_x * 0          * (1 - t_p2b_ra_cos) - t_p2b_ra_y * t_p2b_ra_sin) * p_p_j_x[leg]
-		          + (t_p2b_ra_y * 0          * (1 - t_p2b_ra_cos) + t_p2b_ra_x * t_p2b_ra_sin) * p_p_j_y[leg];
+		p_b_j_x =  	 t_p2b_beta_cos * p_p_j_x[leg];
 
+		p_b_j_y =    t_p2b_alpha_sin * t_p2b_beta_sin * p_p_j_x[leg] 
+				  +  t_p2b_alpha_cos * p_p_j_y[leg]; 
+
+		p_b_j_z =   -t_p2b_alpha_cos * t_p2b_beta_sin * p_p_j_x[leg] 
+				  +  t_p2b_alpha_sin * p_p_j_y[leg];
 
 		// translate by t_Z
 		p_b_j_z = p_b_j_z + t_p2b_t_z;

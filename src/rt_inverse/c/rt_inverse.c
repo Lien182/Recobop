@@ -9,6 +9,11 @@
 #include <stdint.h>
 #include <float.h>
 
+
+#define DIRECTAXIACCESS 1
+#define DEBUG 0
+#define  DEBUG_LIGHT 1
+
 // definitions of stewart platform
 
 // coordinates of platform joints in base coordinates
@@ -40,7 +45,7 @@ int c_arm = 20;
 #define TRIG_MAX_ANGLE_DEG 204.7
 #define TRIG_STEP 0.1
 
-#define DEBUG 0
+
 
 static inline float radians(float deg) {
 	return deg * (M_PI / 180.0);
@@ -78,7 +83,7 @@ THREAD_ENTRY() {
 
 		float t_p2b_alpha = fitofl((data >> 17) & 0x3fff, 14, 6);
 		float t_p2b_beta  = fitofl((data >> 3) & 0x3fff, 14, 6);
-#if DEBUG == 1
+#if (DEBUG == 1) || (DEBUG_LIGHT == 1)
 		printf("[Inverse] alpha %f, beta %f \n", t_p2b_alpha, t_p2b_beta);
 #endif
 		float t_p2b_alpha_sin = sin_lut(t_p2b_alpha * 10.0f);
@@ -153,7 +158,16 @@ THREAD_ENTRY() {
 			}
 		}
 
+#if DIRECTAXIACCESS == 1
 	((uint32_t*)(rb_info->pServo))[leg] = v_s_aj_l_mina;
-
+#else
+	switch(rb_info->demo_nr)
+		{
+			case 0: MBOX_PUT(servo_0_cmd, ((v_s_aj_l_mina << 21) | (leg << 18) | 0)); break;
+			case 1: MBOX_PUT(servo_1_cmd, ((v_s_aj_l_mina << 21) | (leg << 18) | 0)); break;
+			case 2: MBOX_PUT(servo_2_cmd, ((v_s_aj_l_mina << 21) | (leg << 18) | 0)); break;
+			default: break;
+		}
+#endif
 	}
 }

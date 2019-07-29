@@ -96,39 +96,41 @@ static void init_mmap(t_hdmi_input * hdmi_input)
 
 
 
-void hdmi_input_buffer_thread(t_hdmi_input * hdmi_input)
+void* hdmi_input_buffer_thread(void * arg)
 {
 
+
 	struct v4l2_buffer buf;
+	t_hdmi_input * hdmi_input = (t_hdmi_input*)arg;
 
-        CLEAR(buf);
+	CLEAR(buf);
 
-        buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        buf.memory = V4L2_MEMORY_MMAP;
-        while(1)
-        {			
+	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	buf.memory = V4L2_MEMORY_MMAP;
+	while(1)
+	{			
 LOOP:
-            if (-1 == xioctl(hdmi_input->fd, VIDIOC_DQBUF, &buf)) {
-                switch (errno) {
-                case EAGAIN:
-                        usleep(10);
-                        goto LOOP;
+		if (-1 == xioctl(hdmi_input->fd, VIDIOC_DQBUF, &buf)) {
+			switch (errno) {
+			case EAGAIN:
+					usleep(10);
+					goto LOOP;
 
-                case EIO:
-                        /* Could ignore EIO, see spec. */
+			case EIO:
+					/* Could ignore EIO, see spec. */
 
-                default:
-                        errno_exit("VIDIOC_DQBUF");
-                }
-            }
+			default:
+					errno_exit("VIDIOC_DQBUF");
+			}
+		}
 
 
-            MBOX_PUT(hdmi_input->mb,(uint32_t)(buffers[buf.index].start));
-	
-            
-            if (-1 == xioctl(hdmi_input->fd, VIDIOC_QBUF, &buf))
-                    errno_exit("VIDIOC_QBUF");
-        }
+		MBOX_PUT(hdmi_input->mb,(uint32_t)(buffers[buf.index].start));
+
+		
+		if (-1 == xioctl(hdmi_input->fd, VIDIOC_QBUF, &buf))
+				errno_exit("VIDIOC_QBUF");
+    }
 
 }
 

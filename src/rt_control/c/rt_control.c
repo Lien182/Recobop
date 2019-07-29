@@ -13,6 +13,7 @@
 
 
 #define MOTOR_ON 1
+#define DIRECTAXIACCESS 0
 
 
 #define KP -0.0008f
@@ -29,21 +30,14 @@
 
 void kalman(float Ta, float* u, float* y, float* x, float * P)
 {
-	int i;
+	int i,j;
 	float tmp;
-	
+	float sigmainv = SIGMAINV;
 	float Kk[4];	
 	float xk[4];	
-	float Pk[4*4];	
+	float Pk[16];	
 	float* Pp = P; 
-
 	float* xp = x;
-	
-	for(i = 0; i < 16; i++)
-	{
-		printf("%4.3f\t", Pk[i]);
-	}
-	printf("\n");
 
 	if(fabsf(xp[0]) < 200 && fabsf(xp[2]) < 200  )
 	{
@@ -85,11 +79,41 @@ void kalman(float Ta, float* u, float* y, float* x, float * P)
 	{
 		for (i = 0; i < 2; i++)
 		{
+			/*
+			for(j = 0; j < 4;j++)
+			{
+				Kk[j] = Pk[(j<<2) +  2*i] * sigmainv;
+			}
+			tmp = (y[i] - xp[i * 2]);
 
 
-			Kk[0] = Pk[0 +  2*i] * SIGMAINV;
-			Kk[1] = Pk[4 +  2*i] * SIGMAINV;
-			Kk[2] = Pk[8 +  2*i] * SIGMAINV;
+			for(j = 0; j < 4;j++)
+			{
+				xp[j] += Kk[j] * tmp;
+			}
+			
+			//memcpy substitution
+			for(j = 0; j < 16; j++)
+			{
+				Pp[j] = Pk[j];
+			}
+
+			for(j = 0; j < 16; j++)
+			{
+				Pp[j] -= Kk[j>>2] * Pk[(j%4) + 8 * i];
+			}
+
+			//memcpy substitution
+			for(j = 0; j < 16; j++)
+			{
+				Pk[j] = Pp[j];
+			}
+			*/
+			
+
+			Kk[0] = Pk[0  + 2*i] * SIGMAINV;
+			Kk[1] = Pk[4  + 2*i] * SIGMAINV;
+			Kk[2] = Pk[8  + 2*i] * SIGMAINV;
 			Kk[3] = Pk[12 + 2*i] * SIGMAINV;
 
 			printf("KK: (%3.5f,%3.5f,%3.5f,%3.5f) \n",Kk[0],Kk[1],Kk[2],Kk[3] );
@@ -127,6 +151,7 @@ void kalman(float Ta, float* u, float* y, float* x, float * P)
 			Pp[15] -= Kk[3] * Pk[3 + 8 * i];
 
 			memcpy(Pk, Pp, sizeof(float) * 16);
+			
 		}
 	}
 
@@ -146,12 +171,9 @@ THREAD_ENTRY() {
 
 	printf("Hello from control thread of demonstrator %d \n", rb_info->demo_nr );
 
-	float error_x = 0, error_x_diff = 0,  error_x_last = 0;
-	float error_y = 0, error_y_diff = 0,  error_y_last = 0;
+	float error_x_diff = 0,  error_x_last = 0;
+	float error_y_diff = 0,  error_y_last = 0;
 
-
-	float pos_x_f = 0, pos_y_f = 0;
-	
 	float ctrl_x, ctrl_y;
 
 	float dd = 0;
@@ -161,7 +183,7 @@ THREAD_ENTRY() {
 
 	uint32_t bFirst = 1;
 
-
+	float e[2];
 	float u[2];
 	float Ta = 0.03;
 	float x[4];
@@ -193,13 +215,13 @@ THREAD_ENTRY() {
 #endif 
 
 
-	printf("y_1 %4.5f\t,y_2 %4.5f\t,x_1 %4.5f\t,x_2 %4.5f\t,v_1 %4.3f\t,v_2 %4.3f\t,e_1 %4.3f\t,e_2 %4.3f\t,u_1 %4.3f\t,u_2 %4.3f\n", y[0], y[1], x[0], x[2], x[1], x[3], error_x, error_y, u[0], u[1]);
+	printf("y_1 %4.5f\t,y_2 %4.5f\t,x_1 %4.5f\t,x_2 %4.5f\t,v_1 %4.3f\t,v_2 %4.3f\t,e_1 %4.3f\t,e_2 %4.3f\t,u_1 %4.3f\t,u_2 %4.3f\n", y[0], y[1], x[0], x[2], x[1], x[3], e[0], e[1], u[0], u[1]);
 
 	while (1) {
 		volatile uint32_t pos;
 		uint32_t waitstart = *(rb_info->timerregister);
 
-#if 0
+#if DIRECTAXIACCESS == 0
 		switch(rb_info->demo_nr)
 		{
 			case 0: pos = MBOX_GET(touch_0_pos); break;
@@ -271,41 +293,33 @@ THREAD_ENTRY() {
 			x[2] = y[1];
 		}
 
-
-		//printf("1: y_1 %4.3f\t,y_2 %4.3f\t,x_1 %4.3f\t,x_2 %4.3f\t,v_1 %4.3f\t,v_2 %4.3f\t,e_1 %4.3f\t,e_2 %4.3f\t,u_1 %4.3f\t,u_2 %4.3f\n", y[0], y[1], x[0], x[2], x[1], x[3], error_x, error_y, u[0], u[1]);
 		kalman(Ta, u, y, x, P);
 
-		//pos_x_f = pos_x_f * 0.8 + y[0] * 0.2;
-		//pos_y_f = pos_y_f * 0.8 + y[1] * 0.2;
-
-
 		// calculate errors
-		error_x = x[0] - target_x;
-		error_y = x[2] - target_y;
+		e[0] = x[0] - target_x;
+		e[1] = x[2] - target_y;
 
 
 
 		// implement PD controller for x
-		error_x_diff = (error_x - error_x_last) / Ta;
-		error_x_last = error_x;
+		error_x_diff = (e[0] - error_x_last) / Ta;
+		error_x_last = e[0];
 		
 
-		float ctrl_x_p = KP * error_x;
+		float ctrl_x_p = KP * e[0];
 		float ctrl_x_d = KD * error_x_diff;
 		ctrl_x = ctrl_x_p + ctrl_x_d;
 
 
-		// implement PID controller for y
-		error_y_diff = (error_y - error_y_last) / Ta;
-		error_y_last = error_y;
+		// implement 
+		error_y_diff = (e[1] - error_y_last) / Ta;
+		error_y_last = e[1];
 
 
-		float ctrl_y_p = KP * error_y;
+		float ctrl_y_p = KP * e[1];
 		float ctrl_y_d = KD * error_y_diff;
 		ctrl_y = ctrl_y_p +  ctrl_y_d;
 
-
-		
 		t_p2b_ra_x = -ctrl_y * 180.0f / 3.14f;		
 		t_p2b_ra_y = ctrl_x  * 180.0f / 3.14f;
 		
@@ -330,9 +344,9 @@ THREAD_ENTRY() {
 		uint32_t cmd_y = fltofi(t_p2b_ra_y, 14, 6);
 
 #if FILE_LOG == 1
-		fprintf(fd,"%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\n", y[0], y[1], x[0], x[2], x[1], x[3], error_x, error_y, u[0], u[1]);
+		fprintf(fd,"%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\t,%4.3f\n", y[0], y[1], x[0], x[2], x[1], x[3], e[0], e[1], u[0], u[1]);
 #endif
-		printf("y_1 %4.3f\t,y_2 %4.3f\t,x_1 %4.3f\t,x_2 %4.3f\t,v_1 %4.3f\t,v_2 %4.3f\t,e_1 %4.3f\t,e_2 %4.3f\t,u_1 %4.3f\t,u_2 %4.3f\n", y[0], y[1], x[0], x[2], x[1], x[3], error_x, error_y, u[0], u[1]);
+		printf("y_1 %4.3f\t,y_2 %4.3f\t,x_1 %4.3f\t,x_2 %4.3f\t,v_1 %4.3f\t,v_2 %4.3f\t,e_1 %4.3f\t,e_2 %4.3f\t,u_1 %4.3f\t,u_2 %4.3f\n", y[0], y[1], x[0], x[2], x[1], x[3], e[0], e[1], u[0], u[1]);
 
 		//if(rb_info->demo_nr == 0)
 		//	a9timer_caputure(a9timer, &(log_sw_control.a9timer_capture), A9TIMER_CAPTURE_STOP);
@@ -344,9 +358,6 @@ THREAD_ENTRY() {
 			case 2: for (i = 0; i < 6; i++) MBOX_PUT(inverse_2_cmd, ((cmd_x << 17) | (cmd_y << 3) | (i << 0))); break; 
 			default: return; break;
 		}
-
-		
-		
 #endif
 
 	}

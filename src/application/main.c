@@ -51,21 +51,10 @@ inline double radians(double deg) {
 	return deg * (M_PI / 180.0);
 }
 
-static void exit_signal(int sig) {
-
-/*
-	munmap(rb_info[0].pServo,0x10000);
-	munmap(rb_info[1].pServo,0x10000);
-	munmap(rb_info[2].pServo,0x10000);
-	munmap(rb_info[0].pTouch,0x10000);
-	munmap(rb_info[1].pTouch,0x10000);
-	munmap(rb_info[2].pTouch,0x10000);
-
-*/
+static void exit_signal(int sig) 
+{
 	reconos_cleanup();
-
 	printf("[recobop] aborted\n");
-
 	exit(0);
 }
 
@@ -109,6 +98,8 @@ int main(int argc, char **argv) {
 
 	struct hwslot * hw;
 
+	uint32_t control_stack[20];
+
 	t_axi_timer * axi_timer_0;
 	t_axi_timer * axi_timer_1;
 	t_axi_timer * axi_timer_demonstrator_0;
@@ -125,9 +116,9 @@ int main(int argc, char **argv) {
 	int x_pos, y_pos;
 	uint32_t cyclecnt = 0;
 
+	uint32_t data;
 
-	printf("Hello World\n");
-	printf("int is %d and float is %d\n", sizeof(int), sizeof(float));
+	float alpha, beta;
 
 	reconos_init();
 	reconos_app_init();
@@ -138,7 +129,7 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
-	cycle_timer_init(&cycle_timer, 20);
+	cycle_timer_init(&cycle_timer, 20, cycle_timer_cmd_mutex, cycle_timer_cmd_cond);
 
 	//Init Measurement HW
 	a9timer = a9timer_init();
@@ -197,11 +188,12 @@ int main(int argc, char **argv) {
 	rb_info[2].pServo = (uint32_t*)servo_init(memfd, BOP_2_SERVO_BASE_ADDR);
 	rb_info[2].pTouch = (uint32_t*)touch_init(memfd, BOP_2_TOUCH_BASE_ADDR);
 	rb_info[2].demo_nr = 2UL;
+	rb_info[2].stackaddr = (uint32_t)control_stack;
 	rb_info[0].timerregister = &(axi_timer_0->TCR0);
 	rb_info[1].timerregister = &(axi_timer_0->TCR0);
 	rb_info[2].timerregister = &(axi_timer_0->TCR0);
 
-
+	memset(rb_info[2].stackaddr, 0, 20*4);
 	for(i = 0; i < 3; i++)
 	{
 		printf("Init data: %x \n", &(rb_info[i]));
@@ -221,13 +213,20 @@ int main(int argc, char **argv) {
 	{
 		printf("Init Data on %x \n", (void *)&(rb_info[i]));
 		
-		//rb_info[i].thread_p[1] = reconos_thread_create_hwt_servo(  (void *)&(rb_info[i]));
-		rb_info[i].thread_p[2] = reconos_thread_create_swt_control((void *)&(rb_info[i]), 70);
-		rb_info[i].thread_p[3] = reconos_thread_create_swt_inverse((void *)&(rb_info[i]), 69);
-		//rb_info[i].thread_p[4] = reconos_thread_create_hwt_touch(  (void *)&(rb_info[i]));
+		rb_info[i].thread_p[1] = reconos_thread_create_hwt_servo  ((void *)&(rb_info[i]));
+		
+		//rb_info[i].thread_p[2] = reconos_thread_create_swt_control((void *)&(rb_info[i]),70);
+		rb_info[i].thread_p[2] = reconos_thread_create_hwt_control((void *)&(rb_info[i]));
+		
+		rb_info[i].thread_p[3] = reconos_thread_create_hwt_inverse((void *)&(rb_info[i]));
+		rb_info[i].thread_p[4] = reconos_thread_create_swt_touch  ((void *)&(rb_info[i]), 70);
 
 	}
-	printf("Image adress: %x \n", (uint32_t)(video_info.hdmi_output.image));
+
+	//reconos_thread_create_hwt_inverse((void *)&(rb_info[2]));
+	//reconos_thread_create_hwt_inverse((void *)&(rb_info[2]));
+
+	//printf("Image adress: %x \n", (uint32_t)(video_info.hdmi_output.image));
 	//video_info.thread_p = reconos_thread_create_hwt_sobel((uint32_t)(video_info.hdmi_output.image));
 
 
@@ -292,7 +291,7 @@ int main(int argc, char **argv) {
 
 	for(i = 0; i < 3; i++)
 	{
-		printf("Test of nr: %d \n", *((uint32_t*)(&rb_info[i])+48/4));
+		printf("Test of nr: %d \n", *((uint32_t*)(&rb_info[i])+8/4));
 	}
 
 
@@ -323,19 +322,20 @@ int main(int argc, char **argv) {
 
 	while(1) {
 
-		x_pos = ((int32_t*)rb_info[0].pTouch)[0] & 0x0fff;
+	
+		x_pos = ((int32_t*)rb_info[2].pTouch)[0] & 0x0fff;
 	
 		if(x_pos & 0x0800)
 			x_pos |= 0xfffff000;
-		y_pos = ((int32_t*)rb_info[0].pTouch)[1] & 0x0fff;
+		y_pos = ((int32_t*)rb_info[2].pTouch)[1] & 0x0fff;
 		if(y_pos & 0x0800)
 			y_pos |= 0xfffff000;
 
-		cyclecnt = ((int32_t*)rb_info[0].pTouch)[0] >> 12;
-		//printf("1 Touch data: 0:%8d, 1:%8d, CycleCnt %8d\n",x_pos,y_pos, cyclecnt);
-		
-		touch_x = ((uint32_t*)rb_info[0].pTouch)[0];
+		cyclecnt = ((int32_t*)rb_info[2].pTouch)[0] >> 12;		
+		touch_x = ((uint32_t*)rb_info[2].pTouch)[0];
 
+		printf("main AXI: X: %x, Y: %x ;\n", x_pos, y_pos); 
+/*
 		//if(touch_x_old != touch_x)
 			//a9timer_caputure(a9timer, &(log_touch_ctrl.a9timer_capture), A9TIMER_CAPTURE_START); 
 
@@ -347,7 +347,21 @@ int main(int argc, char **argv) {
 		//sleep(1000000000);
 		
 		//printf("CNT REG 0: %x, CNT REG 1: %x \n", axi_timer_1->TCR0, axi_timer_1->TLR0);
-		usleep(10000);
+
+		//pos = mbox_get(touch_2_pos);
+
+		
+
+
+
+		data = mbox_get(inverse_2_cmd); 
+
+		alpha = fitofl((data >> 17) & 0x3fff, 14, 6);
+		beta  = fitofl((data >> 3)  & 0x3fff, 14, 6);
+
+		printf("leg: %d, a: %3.6f, b: %3.6f \n",data & 7, alpha, beta);
+*/
+		usleep(1000);
 	}
 
 	reconos_cleanup();

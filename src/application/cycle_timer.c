@@ -9,28 +9,32 @@ void * cylce_timer_thread(void* arg)
 
     cycle_timer = (t_cycle_timer*)arg;
 
-    struct timespec tim, tim2;
+    struct timespec tim;
     tim.tv_sec = (cycle_timer->period * 1000000) / 1000000000;
     tim.tv_nsec = (cycle_timer->period * 1000000) % 1000000000;
 
     printf("Hello from cycletimer %d ns %d s \n",tim.tv_nsec,tim.tv_sec);
+
     while(1)
     {
-        pthread_mutex_lock(&(cycle_timer->mutex));
-        pthread_cond_broadcast(&(cycle_timer->cond));
-        pthread_mutex_unlock(&(cycle_timer->mutex));
+        pthread_mutex_lock(cycle_timer->mutex);
+        pthread_cond_broadcast(cycle_timer->cond);
+        pthread_mutex_unlock(cycle_timer->mutex);
 
-        nanosleep(&tim , &tim2);
+        nanosleep(&tim , NULL);
 
     }
 
 }
 
 
-void cycle_timer_init(t_cycle_timer * cycle_timer, uint64_t period)
+void cycle_timer_init(t_cycle_timer * cycle_timer, uint64_t period, pthread_mutex_t*    mutex, pthread_cond_t*     cond )
 {
-    pthread_mutex_init ( &(cycle_timer->mutex), NULL);
-    pthread_cond_init(&(cycle_timer->cond), NULL);
+    //pthread_mutex_init((cycle_timer->mutex), NULL);
+    //pthread_cond_init ((cycle_timer->cond), NULL);
+
+    cycle_timer->mutex = mutex;
+    cycle_timer->cond = cond;
 
     cycle_timer->period = period;
 
@@ -85,7 +89,7 @@ void cycle_timer_init(t_cycle_timer * cycle_timer, uint64_t period)
 
 void cycle_timer_wait(t_cycle_timer * cycle_timer)
 {
-        pthread_mutex_lock(&(cycle_timer->mutex));
-        pthread_cond_wait(&(cycle_timer->cond), &(cycle_timer->mutex));
-        pthread_mutex_unlock(&(cycle_timer->mutex)); 
+        pthread_mutex_lock(cycle_timer->mutex);
+        pthread_cond_wait(cycle_timer->cond, cycle_timer->mutex);
+        pthread_mutex_unlock(cycle_timer->mutex); 
 }

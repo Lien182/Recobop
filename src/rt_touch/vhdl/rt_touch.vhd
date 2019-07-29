@@ -42,7 +42,8 @@ architecture implementation of rt_touch is
 	signal i_memif : i_memif_t;
 	signal o_memif : o_memif_t;
 
-	type STATE_TYPE is (STATE_THREAD_INIT, STATE_INIT_DATA,STATE_CTRL,STATE_GET_DEMONSTRATOR_NR,STATE_WAIT_FOR_TRIGGER,
+	type STATE_TYPE is (STATE_THREAD_INIT, STATE_INIT_DATA,STATE_CTRL,STATE_GET_DEMONSTRATOR_NR,STATE_WAIT_FOR_TRIGGER_LOCK_MUTEX,
+						STATE_WAIT_FOR_TRIGGER_WAIT_COND, STATE_WAIT_FOR_TRIGGER_UNLOCK_MUTEX, 
 	                    STATE_GET_TOUCH_SOURCE, STATE_READ_X_POS, STATE_CHECK_X_POS, 
 	                    STATE_READ_Y_POS, STATE_WAIT,
 	                    STATE_STORE_POS, STATE_STORE_DELTA);
@@ -132,17 +133,40 @@ begin
                     if done then
                         touch_base_addr <= unsigned(ret);
 						if ret /= x"00000000" then
-                        	state <= STATE_WAIT_FOR_TRIGGER;
+                        	state <= STATE_WAIT_FOR_TRIGGER_LOCK_MUTEX;
 						else
 							state <= STATE_INIT_DATA;
 						end if;
                     end if;
 				
-				when STATE_WAIT_FOR_TRIGGER => 
-					if HWT_Trig = '1' then
+
+
+
+				when STATE_WAIT_FOR_TRIGGER_LOCK_MUTEX => 
+					osif_mutex_lock(i_osif, o_osif, CYCLE_TIMER_CMD_MUTEX, ignore, done);
+					if done then
+						state <= STATE_WAIT_FOR_TRIGGER_WAIT_COND;
+					end if;
+
+					
+				when STATE_WAIT_FOR_TRIGGER_WAIT_COND =>
+					osif_cond_wait(i_osif, o_osif, CYCLE_TIMER_CMD_COND, CYCLE_TIMER_CMD_MUTEX, ignore, done);
+	
+					if done then
+						-- condition reached
+						state <= STATE_WAIT_FOR_TRIGGER_UNLOCK_MUTEX;
+					end if;
+
+				when STATE_WAIT_FOR_TRIGGER_UNLOCK_MUTEX =>
+					osif_mutex_unlock(i_osif, o_osif, CYCLE_TIMER_CMD_MUTEX, ignore, done);
+					
+					if done then
+						-- now the mutex is unlocked
 						state <= STATE_READ_X_POS;
 					end if;
-					
+
+
+
                 when STATE_READ_X_POS =>
                     memif_read_word(i_memif, o_memif, std_logic_vector(touch_base_addr), ret, done);
                     if done then
@@ -177,11 +201,11 @@ begin
                     end if;                    
                 when STATE_STORE_POS =>
 
-					osif_mbox_put(i_osif, o_osif, std_logic_vector(demonstrator_nr), x"00" & x_pos_s & y_pos_s, ignore, done);
+					osif_mbox_put(i_osif, o_osif, std_logic_vector(unsigned(TOUCH_0_POS) + demonstrator_nr), x"00" & x_pos_s & y_pos_s, ignore, done);
                     if done then
 						x_pos_old <= x_pos_s;
 						y_pos_old <= y_pos_s;
-						state <= STATE_WAIT_FOR_TRIGGER;
+						state <= STATE_WAIT_FOR_TRIGGER_LOCK_MUTEX;
 						cnt <= (others => '0');
 					end if;
 
@@ -192,17 +216,19 @@ begin
 		end if;
 
 		case state is
-          when STATE_THREAD_INIT =>         HWT_DEBUG <= x"01";
-          when STATE_INIT_DATA =>           HWT_DEBUG <= x"02";
-          when STATE_GET_DEMONSTRATOR_NR => HWT_DEBUG <= x"03";
-          when STATE_GET_TOUCH_SOURCE =>    HWT_DEBUG <= x"04";
-          when STATE_WAIT_FOR_TRIGGER =>    HWT_DEBUG <= x"05";
-          when STATE_READ_X_POS =>          HWT_DEBUG <= x"06";
-          when STATE_CHECK_X_POS =>         HWT_DEBUG <= x"07";
-          when STATE_WAIT =>                HWT_DEBUG <= x"08";
-          when STATE_READ_Y_POS =>          HWT_DEBUG <= x"09";
-          when STATE_STORE_POS =>           HWT_DEBUG <= x"0A";
-          when others=>                     HWT_DEBUG <= x"0B";
+          when STATE_THREAD_INIT =>         		HWT_DEBUG <= x"01";
+          when STATE_INIT_DATA =>           		HWT_DEBUG <= x"02";
+          when STATE_GET_DEMONSTRATOR_NR => 		HWT_DEBUG <= x"03";
+          when STATE_GET_TOUCH_SOURCE =>    		HWT_DEBUG <= x"04";
+          when STATE_WAIT_FOR_TRIGGER_LOCK_MUTEX => HWT_DEBUG <= x"05";
+		  when STATE_WAIT_FOR_TRIGGER_WAIT_COND =>  HWT_DEBUG <= x"06";
+		  when STATE_WAIT_FOR_TRIGGER_UNLOCK_MUTEX=>HWT_DEBUG <= x"07";
+          when STATE_READ_X_POS =>          		HWT_DEBUG <= x"08";
+          when STATE_CHECK_X_POS =>         		HWT_DEBUG <= x"09";
+          when STATE_WAIT =>                		HWT_DEBUG <= x"0A";
+          when STATE_READ_Y_POS =>          		HWT_DEBUG <= x"0B";
+          when STATE_STORE_POS =>           		HWT_DEBUG <= x"0C";
+          when others=>                     		HWT_DEBUG <= x"0D";
         end case;
 
 	end process osfsm_proc;
