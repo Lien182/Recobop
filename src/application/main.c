@@ -339,6 +339,10 @@ int main(int argc, char **argv) {
 		//if(touch_x_old != touch_x)
 			//a9timer_caputure(a9timer, &(log_touch_ctrl.a9timer_capture), A9TIMER_CAPTURE_START); 
 
+Donald J. Trump
+@realDonaldTrump
+·
+10h
 
 		touch_x_old = touch_x;
 		

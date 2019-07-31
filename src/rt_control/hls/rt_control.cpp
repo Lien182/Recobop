@@ -107,6 +107,7 @@ void kalman(ap_fixed<N,M,AP_RND_CONV, ROUNDING>* u, ap_fixed<N,M,AP_RND_CONV, RO
 
 
 
+
 THREAD_ENTRY() {
 	#pragma HLS INTERFACE ap_none port=debug_port
 
@@ -128,7 +129,7 @@ THREAD_ENTRY() {
 	ap_fixed<N,M,AP_RND_CONV, ROUNDING> error_x, error_x_diff, error_x_sum = 0, error_y, error_y_diff, error_y_sum = 0, p_p_b_x = 0, p_p_b_y = 0, error_x_last = 0, error_y_last = 0;
 
 
-	uint32 thread_stack[20];
+	uint32 thread_stack[30];
 
 	uint32 rb_info;
 	uint32 demonstrator_nr[1];
@@ -142,7 +143,7 @@ THREAD_ENTRY() {
 		*debug_port = 0;
 	}
 
-	while (1) {
+	while (1) {	
 
 		ap_uint<32> pos;
 		switch(demonstrator_nr[0])
@@ -244,18 +245,30 @@ THREAD_ENTRY() {
 			default: break;
 		}
 
+		MEM_READ( rb_info + 20,  rc_flag , 4);
+		if(rc_flag[0] == 1)
+		{
+			//marshalling
+			int j = 0;
 
-		/*
+			for(int i = 0; i < 4; i++)
+				thread_stack[j++] =  x[i].range(N,0);
+			for(int i = 0; i < 16; i++)
+				thread_stack[j++] = P[i].range(N,0);
+	
+			thread_stack[j++] = error_x_last.range(N,0);
+			thread_stack[j++] = error_y_last.range(N,0);
+			thread_stack[j++] = u[0].range(N,0);
+			thread_stack[j++] = u[1].range(N,0);
 
-		//marshalling
-		for(int i = 0; i < 4; i++)
-			thread_stack[i] =  x[i].range(19,0);
-		for(int i = 0; i < 16; i++)
-			thread_stack[i+4] = P[i].range(19,0);
+			MEM_WRITE(thread_stack,stack_addr[0],j*4);
 
-		MEM_WRITE(thread_stack,stack_addr[0],20*4);
+			MBOX_PUT(inverse_0_cmd, (cmd_x, cmd_y, (ap_uint<3>)i));
+			THREAD_EXIT();
+			while(1);
 
-		*/
+		}
+
 
 	
 		if(demonstrator_nr[0] == 0)
