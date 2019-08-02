@@ -42,13 +42,21 @@ THREAD_ENTRY() {
 
 	#pragma HLS INTERFACE ap_none port=debug_port
 
+	uint32 leg_cnt = 0;
 	uint32 rb_info;
 	uint32 demonstrator_nr[1];
+	uint32 stack_addr[1];
+	uint32 threadid[1];
+	uint32 rc_flag[1];
+
 	{
 		#pragma HLS PROTOCOL fixed
 		THREAD_INIT();
 		rb_info = GET_INIT_DATA();
 		MEM_READ( rb_info + 8, demonstrator_nr , 4);
+		MEM_READ( rb_info + 28, stack_addr     , 4);
+		MEM_READ( rb_info + 36, threadid	   , 4);
+
 		*debug_port = 0;
 	}
 	
@@ -68,6 +76,15 @@ THREAD_ENTRY() {
 			case 2: data.range(31,0) = MBOX_GET(inverse_2_cmd); break;
 			default: break;
 		}
+
+		if (leg_cnt < 6)
+			leg_cnt++;
+		else
+		{
+			leg_cnt = 1;
+		}
+		
+
 		
 		if(data(2,0) == 0)
 		{
@@ -206,6 +223,18 @@ THREAD_ENTRY() {
 			case 2: MBOX_PUT(servo_2_cmd, (v_s_aj_l_mina, cmd_l, ap_uint<18>(0))); break;
 			default: break;
 		}
+
+		MEM_READ( rb_info + 32,  rc_flag , 4);
+		if((rc_flag[0] == 1) && (leg_cnt == 6))
+		{	
+
+			while(MBOX_TRYPUT(reconfiguration_request, threadid[0]) != 1);
+			*debug_port |= (1<<5);
+
+			while(1);
+
+		}
+
 	
 		if(data(2,0) == 0)
 		{

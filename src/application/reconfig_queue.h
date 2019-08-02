@@ -4,12 +4,11 @@
 #include <pthread.h>
 #include <stdint.h>
 #include "queue.h"
-#include "reconfig.h"
+#include "reconfig_settings.h"
 
 
 typedef struct 
 {
-     pthread_mutex_t queue_mutex;
      t_queue slotqueue[MAX_THREADS]; 
 
 }t_reconfig_queue;

@@ -25,6 +25,8 @@
 #include "memory.h"
 #include "cycle_timer.h"
 
+#include "reconfig.h"
+
 
 #define MAX_ANGLE 60
 #define SLEEP 20000
@@ -176,6 +178,8 @@ int main(int argc, char **argv) {
 	}
 	*/
 
+	
+
 	axi_timer_start(axi_timer_1, TIMER_AXI_START_CHANNEL_0, TIMER_AXI_MODE_GENERATE, 3000000);
 
 
@@ -185,15 +189,32 @@ int main(int argc, char **argv) {
 	rb_info[1].pServo = (uint32_t*)servo_init(memfd, BOP_1_SERVO_BASE_ADDR);
 	rb_info[1].pTouch = (uint32_t*)touch_init(memfd, BOP_1_TOUCH_BASE_ADDR);
 	rb_info[1].demo_nr = 1UL;
+
+
+	rb_info[2].rc_flag_control = 0UL;
+	rb_info[2].rc_flag_inverse = 0UL;
 	rb_info[2].pServo = (uint32_t*)servo_init(memfd, BOP_2_SERVO_BASE_ADDR);
 	rb_info[2].pTouch = (uint32_t*)touch_init(memfd, BOP_2_TOUCH_BASE_ADDR);
 	rb_info[2].demo_nr = 2UL;
-	rb_info[2].stackaddr = (uint32_t)control_stack;
+	rb_info[2].stackaddr_control = (uint32_t)malloc(50 * sizeof(uint32_t));
+	rb_info[2].threadid_control = 42;
+	rb_info[2].stackaddr_inverse = (uint32_t)control_stack;
+	rb_info[2].threadid_inverse = 45;
+
+
+
 	rb_info[0].timerregister = &(axi_timer_0->TCR0);
 	rb_info[1].timerregister = &(axi_timer_0->TCR0);
 	rb_info[2].timerregister = &(axi_timer_0->TCR0);
 
-	memset(rb_info[2].stackaddr, 0, 20*4);
+	//memset(rb_info[2].stackaddr, 0, 50 * sizeof(uint32_t));
+
+	for(i = 0; i < 25; i++)
+	{
+		rb_info[2].stackaddr_control[i] = i<<19 ;
+	}
+
+
 	for(i = 0; i < 3; i++)
 	{
 		printf("Init data: %x \n", &(rb_info[i]));
@@ -320,6 +341,13 @@ int main(int argc, char **argv) {
 	}
 #endif
 
+	for(i = 0; i < 50; i++)
+	{
+		printf("%2d: %3.4f ", i, ((float)(rb_info[2].stackaddr_control)[i])/powf(2,19));
+		if((i%10) == 9)
+			printf("\n");
+	}
+
 	while(1) {
 
 	
@@ -334,15 +362,11 @@ int main(int argc, char **argv) {
 		cyclecnt = ((int32_t*)rb_info[2].pTouch)[0] >> 12;		
 		touch_x = ((uint32_t*)rb_info[2].pTouch)[0];
 
-		printf("main AXI: X: %x, Y: %x ;\n", x_pos, y_pos); 
+		//printf("main AXI: X: %x, Y: %x ;\n", x_pos, y_pos); 
 /*
 		//if(touch_x_old != touch_x)
 			//a9timer_caputure(a9timer, &(log_touch_ctrl.a9timer_capture), A9TIMER_CAPTURE_START); 
 
-Donald J. Trump
-@realDonaldTrump
-·
-10h
 
 		touch_x_old = touch_x;
 		
@@ -364,8 +388,42 @@ Donald J. Trump
 		beta  = fitofl((data >> 3)  & 0x3fff, 14, 6);
 
 		printf("leg: %d, a: %3.6f, b: %3.6f \n",data & 7, alpha, beta);
-*/
-		usleep(1000);
+*/	
+
+		usleep(100000);
+		printf("Going to set the inverse rc flag \n");
+		rb_info[2].rc_flag_inverse = 1;
+		rb_info[2].rc_flag_control = 1;
+		usleep(10000);
+		printf("Mailbox request: %d \n",mbox_get(reconfiguration_request));
+	
+	
+		usleep(1000000);
+		printf("Going to set the control rc flag \n");
+		
+		usleep(10000);
+
+		printf("Mailbox request: %d \n",mbox_get(reconfiguration_request));
+		printf("After RC flag is set... \n");
+		for(i = 0; i < 50; i++)
+		{
+			printf("%2d: %3.4f ", i, ((float)(rb_info[2].stackaddr_control)[i])/powf(2,19));
+			if((i%10) == 9)
+				printf("\n");
+		}
+
+
+
+		
+
+
+
+		while(1){
+			sleep(2);
+			printf("Done... \n");
+		}
+
+
 	}
 
 	reconos_cleanup();

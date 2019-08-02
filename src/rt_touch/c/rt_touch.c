@@ -7,11 +7,18 @@
 #include <math.h>
 #include <stdio.h>
 
+#define DEBUG 1
+
 THREAD_ENTRY() {
 	struct recobop_info *rb_info;
 	int i;
 	struct reconos_thread * rt;
 	uint32_t x_pos, y_pos;
+
+#if DEBUG == 1
+	double dd = 0.0;
+#endif
+
 
 	THREAD_INIT();
 	rt = (struct reconos_thread *)GET_INIT_DATA();
@@ -24,13 +31,19 @@ THREAD_ENTRY() {
 		
 		cycle_timer_wait(&cycle_timer);
 
+#if DEBUG == 0
+
 		x_pos = ((int32_t*)rb_info->pTouch)[0] & 0x0fff;	
 		if(x_pos & 0x0800) x_pos |= 0xfffff000;
 		y_pos = ((int32_t*)rb_info->pTouch)[1] & 0x0fff;
 		if(y_pos & 0x0800) y_pos |= 0xfffff000;
 
-		printf("AXI: X: %08x, Y: %08x;\n", x_pos, y_pos); 
-
+#else
+		x_pos = (int32_t)(200 * cos(dd));
+		y_pos = (int32_t)(200 * sin(dd));
+		dd += 0.01;
+		//printf("[rt_touch] x_pos %08x, y_pos %08x \n", x_pos, y_pos);
+#endif
 
 		switch(rb_info->demo_nr)
 		{

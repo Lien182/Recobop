@@ -2,14 +2,18 @@
 #define QUEUE_H
 
 #include <stdint.h>
+#include <semaphore.h>
 
 
 typedef struct 
 {
-     uint32_t * buf;
-     uint32_t tail;
-     uint32_t head;
-     uint32_t size;
+     uint32_t *          buf;
+     uint32_t            tail;
+     uint32_t            head;
+     uint32_t            size;
+     sem_t               sem_write;
+     sem_t               sem_read;
+     pthread_mutex_t     queue_mutex;
 } t_queue;
 
 

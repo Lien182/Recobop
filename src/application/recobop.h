@@ -15,13 +15,16 @@
 t_cycle_timer cycle_timer;
 
 struct recobop_info {
-	volatile uint32_t* pTouch;			// +0
-	volatile uint32_t* pServo;			// +4
-	volatile uint32_t  demo_nr;			// +8
-	volatile uint32_t* timerregister;	// +12
-	volatile uint32_t* stackaddr;		// +16
-	volatile uint32_t  rc_flag;         // +20
-	volatile uint32_t  threadid;        // +24
+	volatile uint32_t* pTouch;				// +0
+	volatile uint32_t* pServo;				// +4
+	volatile uint32_t  demo_nr;				// +8
+	volatile uint32_t* timerregister;		// +12
+	volatile uint32_t* stackaddr_control;	// +16
+	volatile uint32_t  rc_flag_control; 	// +20
+	volatile uint32_t  threadid_control;	// +24
+	volatile uint32_t* stackaddr_inverse;   // +28
+	volatile uint32_t  rc_flag_inverse; 	// +32
+	volatile uint32_t  threadid_inverse;	// +36
 
 	volatile int thread_count;
 	volatile struct reconos_thread *thread_p[16];

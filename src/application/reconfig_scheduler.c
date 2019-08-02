@@ -1,12 +1,21 @@
-#include "reconfig_scheduler.h"
+#include "reconfig.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/mman.h>
 #include <limits.h>
 
 
-void reconfig_scheduler_init(t_reconfig_scheduler * reconfig_scheduler, t_reconfig_queue * reconfig_queue)
+void reconfig_scheduler_init(t_reconfig_scheduler * reconfig_scheduler)
 {
 	reconfig_scheduler->taskset_size = 0;
+
+	//Initializatuon of the queue
+	reconfig_queue_init(&(reconfig_scheduler->reconfig_queue));
+
+	//Initialization of the dispatcher
+	reconfig_dispatcher_init(&(reconfig_scheduler->reconfig_dispatcher));
+
+
 }
 
 void reconfig_scheduler_schedule(t_reconfig_scheduler * reconfig_scheduler)
@@ -23,7 +32,12 @@ void reconfig_scheduler_schedule(t_reconfig_scheduler * reconfig_scheduler)
 }
 
 
-uint32_t reconfig_scheduler_register_new_task(t_reconfig_scheduler * reconfig_scheduler, uint32_t slotmask, uint32_t contextsize)
+int32_t    reconfig_scheduler_register_new_slot(t_reconfig_scheduler * reconfig_scheduler, void ** rtinit_data)
+{
+
+}
+
+int32_t    reconfig_scheduler_register_new_task(t_reconfig_scheduler * reconfig_scheduler, uint32_t slotmask, uint32_t contextsize, void * initdata)
 {
 	if(reconfig_scheduler->taskset_size < MAX_THREADS)
 	{
@@ -49,7 +63,7 @@ uint32_t reconfig_scheduler_register_new_task(t_reconfig_scheduler * reconfig_sc
 	
 }
 
-uint32_t reconfig_scheduler_dispatcher_feedback(t_reconfig_scheduler * reconfig_scheduler, uint32_t slot, uint32_t oldthreadid, uint32_t newthreadid)
+int32_t reconfig_scheduler_dispatcher_feedback(t_reconfig_scheduler * reconfig_scheduler, uint32_t slot, uint32_t oldthreadid, uint32_t newthreadid)
 {
 	reconfig_scheduler->taskset[newthreadid].state = TASKSTATE_RUNNING;
 	reconfig_scheduler->taskset[oldthreadid].state = TASKSTATE_WAITING;
