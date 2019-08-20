@@ -42,6 +42,14 @@
 #define AXI_TIMER_1_ADDR	0x42810000
 
 
+char * bitstream_control_0[1] = {"control_0_slot_0.bit"};
+char * bitstream_inverse_0[1] = {"inverse_0_slot_1.bit"};
+char * bitstream_control_1[1] = {"control_1_slot_0.bit"};
+char * bitstream_inverse_1[1] = {"inverse_1_slot_1.bit"};
+char * bitstream_control_2[1] = {"control_2_slot_0.bit"};
+char * bitstream_inverse_2[1] = {"inverse_2_slot_1.bit"};
+
+
 
 
 volatile struct recobop_info rb_info[3];
@@ -122,6 +130,8 @@ int main(int argc, char **argv) {
 
 	float alpha, beta;
 
+	t_reconfig_scheduler reconfig_scheduler;
+
 	reconos_init();
 	reconos_app_init();
 
@@ -182,33 +192,40 @@ int main(int argc, char **argv) {
 
 	axi_timer_start(axi_timer_1, TIMER_AXI_START_CHANNEL_0, TIMER_AXI_MODE_GENERATE, 3000000);
 
-
+	rb_info[0].timerregister = &(axi_timer_0->TCR0);
+	rb_info[0].rc_flag_control = 0UL;
+	rb_info[0].rc_flag_inverse = 0UL;
 	rb_info[0].pServo = (uint32_t*)servo_init(memfd, BOP_0_SERVO_BASE_ADDR);
 	rb_info[0].pTouch = (uint32_t*)touch_init(memfd, BOP_0_TOUCH_BASE_ADDR);
 	rb_info[0].demo_nr = 0UL;
+	rb_info[2].stackaddr_control = (uint32_t)malloc(50 * sizeof(uint32_t));
+	rb_info[2].threadid_control = 0;
+	rb_info[2].stackaddr_inverse = (uint32_t)malloc(50 * sizeof(uint32_t));
+	rb_info[2].threadid_inverse = 3;
+	
+	rb_info[1].timerregister = &(axi_timer_0->TCR0);
+	rb_info[1].rc_flag_control = 0UL;
+	rb_info[1].rc_flag_inverse = 0UL;
 	rb_info[1].pServo = (uint32_t*)servo_init(memfd, BOP_1_SERVO_BASE_ADDR);
 	rb_info[1].pTouch = (uint32_t*)touch_init(memfd, BOP_1_TOUCH_BASE_ADDR);
 	rb_info[1].demo_nr = 1UL;
+	rb_info[1].stackaddr_control = (uint32_t)malloc(50 * sizeof(uint32_t));
+	rb_info[1].threadid_control = 1;
+	rb_info[1].stackaddr_inverse = (uint32_t)malloc(50 * sizeof(uint32_t));
+	rb_info[1].threadid_inverse = 4;
 
-
+	rb_info[2].timerregister = &(axi_timer_0->TCR0);
 	rb_info[2].rc_flag_control = 0UL;
 	rb_info[2].rc_flag_inverse = 0UL;
 	rb_info[2].pServo = (uint32_t*)servo_init(memfd, BOP_2_SERVO_BASE_ADDR);
 	rb_info[2].pTouch = (uint32_t*)touch_init(memfd, BOP_2_TOUCH_BASE_ADDR);
 	rb_info[2].demo_nr = 2UL;
 	rb_info[2].stackaddr_control = (uint32_t)malloc(50 * sizeof(uint32_t));
-	rb_info[2].threadid_control = 42;
-	rb_info[2].stackaddr_inverse = (uint32_t)control_stack;
-	rb_info[2].threadid_inverse = 45;
+	rb_info[2].threadid_control = 2;
+	rb_info[2].stackaddr_inverse = (uint32_t)malloc(50 * sizeof(uint32_t));
+	rb_info[2].threadid_inverse = 5;
 
-
-
-	rb_info[0].timerregister = &(axi_timer_0->TCR0);
-	rb_info[1].timerregister = &(axi_timer_0->TCR0);
-	rb_info[2].timerregister = &(axi_timer_0->TCR0);
-
-	//memset(rb_info[2].stackaddr, 0, 50 * sizeof(uint32_t));
-
+	
 	for(i = 0; i < 25; i++)
 	{
 		rb_info[2].stackaddr_control[i] = i<<19 ;
@@ -224,29 +241,41 @@ int main(int argc, char **argv) {
 	}
 
 
+	//Scheduler Init
+	reconfig_scheduler_init(&(reconfig_scheduler));
+
 	signal(SIGINT, exit_signal);
 	signal(SIGTERM, exit_signal);
 	signal(SIGABRT, exit_signal);
 
 	printf("Initializing Info\n");
-	sleep(1);
-	for(i = 2; i < 3; i++)
+	
+	for(i = 0; i < 3; i++)
 	{
-		printf("Init Data on %x \n", (void *)&(rb_info[i]));
-		
-		rb_info[i].thread_p[1] = reconos_thread_create_hwt_servo  ((void *)&(rb_info[i]));
-		
-		//rb_info[i].thread_p[2] = reconos_thread_create_swt_control((void *)&(rb_info[i]),70);
-		rb_info[i].thread_p[2] = reconos_thread_create_hwt_control((void *)&(rb_info[i]));
-		
-		rb_info[i].thread_p[3] = reconos_thread_create_hwt_inverse((void *)&(rb_info[i]));
+		printf("Init Data on %x \n", (void *)&(rb_info[i]));		
+		rb_info[i].thread_p[1] = reconos_thread_create_swt_servo  ((void *)&(rb_info[i]), 70);
 		rb_info[i].thread_p[4] = reconos_thread_create_swt_touch  ((void *)&(rb_info[i]), 70);
 
 	}
 
-	//reconos_thread_create_hwt_inverse((void *)&(rb_info[2]));
-	//reconos_thread_create_hwt_inverse((void *)&(rb_info[2]));
+	//rb_info[i].thread_p[2] = reconos_thread_create_swt_control((void *)&(rb_info[i]),70);
+	rb_info[0].thread_p[2] = reconos_thread_create_hwt_control((void *)&(rb_info[i]));
+	rb_info[0].thread_p[3] = reconos_thread_create_hwt_inverse((void *)&(rb_info[i]));
 
+	
+	
+	reconfig_scheduler_register_new_slot(&(reconfig_scheduler), &(rb_info[0].thread_p[2]->init_data), reconfiguration_0_request);
+	reconfig_scheduler_register_new_slot(&(reconfig_scheduler), &(rb_info[0].thread_p[3]->init_data), reconfiguration_1_request);
+
+	reconfig_scheduler_register_new_task(&(reconfig_scheduler), SLOTMASK_SLOT_0, 100 * sizeof(uint32_t),(void*) &(rb_info[0]), bitstream_control_0); 
+	reconfig_scheduler_register_new_task(&(reconfig_scheduler), SLOTMASK_SLOT_0, 100 * sizeof(uint32_t),(void*) &(rb_info[1]), bitstream_control_1);
+	reconfig_scheduler_register_new_task(&(reconfig_scheduler), SLOTMASK_SLOT_0, 100 * sizeof(uint32_t),(void*) &(rb_info[2]), bitstream_control_2);
+
+	reconfig_scheduler_register_new_task(&(reconfig_scheduler), SLOTMASK_SLOT_1, 100 * sizeof(uint32_t),(void*) &(rb_info[0]), bitstream_inverse_0); 
+	reconfig_scheduler_register_new_task(&(reconfig_scheduler), SLOTMASK_SLOT_1, 100 * sizeof(uint32_t),(void*) &(rb_info[1]), bitstream_inverse_1);
+	reconfig_scheduler_register_new_task(&(reconfig_scheduler), SLOTMASK_SLOT_1, 100 * sizeof(uint32_t),(void*) &(rb_info[2]), bitstream_inverse_2);
+
+	
 	//printf("Image adress: %x \n", (uint32_t)(video_info.hdmi_output.image));
 	//video_info.thread_p = reconos_thread_create_hwt_sobel((uint32_t)(video_info.hdmi_output.image));
 
@@ -378,10 +407,6 @@ int main(int argc, char **argv) {
 
 		//pos = mbox_get(touch_2_pos);
 
-		
-
-
-
 		data = mbox_get(inverse_2_cmd); 
 
 		alpha = fitofl((data >> 17) & 0x3fff, 14, 6);
@@ -395,7 +420,7 @@ int main(int argc, char **argv) {
 		rb_info[2].rc_flag_inverse = 1;
 		rb_info[2].rc_flag_control = 1;
 		usleep(10000);
-		printf("Mailbox request: %d \n",mbox_get(reconfiguration_request));
+		printf("Mailbox request: %d \n",mbox_get(reconfiguration_0_request));
 	
 	
 		usleep(1000000);
@@ -403,7 +428,7 @@ int main(int argc, char **argv) {
 		
 		usleep(10000);
 
-		printf("Mailbox request: %d \n",mbox_get(reconfiguration_request));
+		printf("Mailbox request: %d \n",mbox_get(reconfiguration_0_request));
 		printf("After RC flag is set... \n");
 		for(i = 0; i < 50; i++)
 		{
@@ -411,12 +436,6 @@ int main(int argc, char **argv) {
 			if((i%10) == 9)
 				printf("\n");
 		}
-
-
-
-		
-
-
 
 		while(1){
 			sleep(2);

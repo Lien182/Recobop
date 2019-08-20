@@ -1,5 +1,6 @@
 #include "cycle_timer.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/mman.h>
 #include <limits.h>
 
@@ -13,7 +14,7 @@ void * cylce_timer_thread(void* arg)
     tim.tv_sec = (cycle_timer->period * 1000000) / 1000000000;
     tim.tv_nsec = (cycle_timer->period * 1000000) % 1000000000;
 
-    printf("Hello from cycletimer %d ns %d s \n",tim.tv_nsec,tim.tv_sec);
+    printf("Hello from cycletimer %d ns %d s \n",(uint32_t)tim.tv_nsec,(uint32_t)tim.tv_sec);
 
     while(1)
     {

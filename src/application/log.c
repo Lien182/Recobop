@@ -110,8 +110,11 @@ void log_deinit(t_log * log)
 	fclose(log->fd);
 }
 
-void log_checkthread(t_log * log)
+void * log_checkthread(void * arg)
 {
+	t_log * log = (t_log*)arg;
+
+
 	while(log->bStop != 1)
 	{
 		if(log->mode & LOG_INTERNAL_MODE_SINGLE)
@@ -122,6 +125,7 @@ void log_checkthread(t_log * log)
 		usleep(log->sleeptime);
 	}
 
+	return NULL;
 }
 
 void log_init(t_log * log, void * measurement_unit, uint32_t channel, uint32_t mode, char * filename, double scale, char * unit, uint32_t sleeptime)

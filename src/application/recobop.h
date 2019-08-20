@@ -15,29 +15,26 @@
 t_cycle_timer cycle_timer;
 
 struct recobop_info {
-	volatile uint32_t* pTouch;				// +0
-	volatile uint32_t* pServo;				// +4
-	volatile uint32_t  demo_nr;				// +8
-	volatile uint32_t* timerregister;		// +12
-	volatile uint32_t* stackaddr_control;	// +16
-	volatile uint32_t  rc_flag_control; 	// +20
-	volatile uint32_t  threadid_control;	// +24
-	volatile uint32_t* stackaddr_inverse;   // +28
-	volatile uint32_t  rc_flag_inverse; 	// +32
-	volatile uint32_t  threadid_inverse;	// +36
+	volatile uint32_t* pTouch;				// Offset +00
+	volatile uint32_t* pServo;				// Offset +04
+	volatile uint32_t  demo_nr;				// Offset +08
+	volatile uint32_t* timerregister;		// Offset +12
+	volatile uint32_t* stackaddr_control;	// Offset +16
+	volatile uint32_t  rc_flag_control; 	// Offset +20
+	volatile uint32_t  threadid_control;	// Offset +24
+	volatile uint32_t* stackaddr_inverse;   // Offset +28
+	volatile uint32_t  rc_flag_inverse; 	// Offset +32
+	volatile uint32_t  threadid_inverse;	// Offset +36
 
 	volatile int thread_count;
-	volatile struct reconos_thread *thread_p[16];
-	
+	volatile struct reconos_thread *thread_p[4];
 };
 
 
 typedef struct {
 	t_hdmi_input	hdmi_input;
 	t_hdmi_output 	hdmi_output;
-
 	volatile struct reconos_thread *thread_p;
-
 } t_video_info;
 
 

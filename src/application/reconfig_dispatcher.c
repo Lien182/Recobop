@@ -8,19 +8,11 @@
 #include <string.h>
 #include <math.h>
 #include <limits.h>
-
+#include "mbox.h"
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
-
-
-char* bitstream_file_list[4] =
-{
-     "slot_0_control_thread.bit", "slot_1_control_thread.bit", "slot_0_inverse_thread.bit", "slot_1_inverse_thread.bit"
-};
-
-
 
 int reconfigure(t_bitstream bitstream, uint32_t threadid, uint32_t partial){
 	/* construct path of bitfile */
@@ -65,64 +57,35 @@ int reconfigure(t_bitstream bitstream, uint32_t threadid, uint32_t partial){
 }
 
 
-int reconfig_dispatcher_buffer_bitstream(t_reconfig_dispatcher * reconfig_dispatcher, char* filename, t_bitstream * bitstream)
-{
-
-	FILE *bitfile;
-
-	bitfile = fopen(filename, "rb");
-	if(!bitfile){
-		printf("[Reconfig Dispatcher] Error opening bitfile %s\n",filename);
-		return -1;
-	}
-
-	fseek(bitfile,0L,SEEK_END);
-	bitstream->size=ftell(bitfile);
-	rewind(bitfile);
-
-	bitstream->data = (char *)malloc(bitstream->size*sizeof(char));
-	if(!(bitstream->data)){
-		printf("[Reconfig Dispatcher] Error allocating memory for bitstream %s\n",filename);
-		return -1;
-	}
-	fread(bitstream->data, sizeof(char), bitstream->size, bitfile);
-	fclose(bitfile);
-
-        printf("[Reconfig Dispatcher] Loaded bitfile %s [%d bytes] into RAM \n", filename, bitstream->size);
-        return 0;
-}
 
 
 void * reconfig_dispatcher_thread(void* arg)
-{
-    t_reconfig_scheduler  * reconfig_scheduler  = (t_reconfig_scheduler*)arg;    
-    t_reconfig_dispatcher * reconfig_dispatcher = &(reconfig_scheduler->reconfig_dispatcher); 
-    uint32_t req = 0; // 16bit slot id (high bits) && 16 bit thread id
-    uint32_t slotid, threadid,newthreadid;
+{ 
+    t_reconfig_slot * reconfig_slot = (t_reconfig_slot*)arg; 
+    uint32_t threadid,newthreadid;
     
+    uint32_t slotid = reconfig_slot->slotid;
 
     while(1)
     {
-        req = mbox_get(reconfig_dispatcher->mb_reconfig_request);
-        
-        threadid = (req & 0xffff);
-        slotid =   (req >> 16) & 0xffff;
-        
+  
+        threadid = mbox_get(reconfig_slot->reconfig_dispatcher.mb_reconfig_request);
+  
         /* DO RECONFIGURATION */
-        
-
         if(threadid >= MAX_THREADS)
         {
                 printf("[Reconfig Dispatcher] Fatal Error: wrong reqested threadid\n");
                 break;
         }
 
-        newthreadid = reconfig_queue_dequeue( &(reconfig_scheduler->reconfig_queue), slotid);
-        reconfigure((reconfig_dispatcher->bitstreams[threadid]), threadid, 1);
-        reconfig_scheduler_dispatcher_feedback(reconfig_scheduler, slotid, threadid, newthreadid);
+        newthreadid = reconfig_queue_dequeue( reconfig_slot->reconfig_dispatcher.reconfig_queue, slotid);
 
-        //mbox_put(reconfig_dispatcher->mb_reconfig_response, req);
+        //change init data
+        *(reconfig_slot->rtinit_data) = reconfig_slot->reconfig_dispatcher.threads[newthreadid].init_data;
+        reconfigure(reconfig_slot->reconfig_dispatcher.threads[threadid].bitstreams[slotid], threadid, 1);
     }
+
+    return NULL;
 
 }
 
@@ -132,14 +95,6 @@ void reconfig_dispatcher_init(t_reconfig_dispatcher * reconfig_dispatcher)
     struct sched_param param;
     pthread_attr_t attr;
     int ret;
-    int i;
-
-    //READ BITSTREAMS INTO RAM
-    for(i = 0; i < MAX_THREADS; i++)
-    {
-            reconfig_dispatcher_buffer_bitstream(reconfig_dispatcher, bitstream_file_list[i],&(reconfig_dispatcher->bitstreams[i]) );
-    }
-
 
 
     /* Lock memory */
@@ -181,7 +136,9 @@ void reconfig_dispatcher_init(t_reconfig_dispatcher * reconfig_dispatcher)
             return;
     }
     
-    pthread_create(&reconfig_dispatcher->reconfig_dispatcher_thread, &attr, &reconfig_dispatcher_thread, (void*)reconfig_dispatcher);
+    pthread_create(&reconfig_dispatcher->reconfig_dispatcher_thread, &attr, &reconfig_dispatcher_thread, (void*)reconfig_dispatcher);      
+    
+    
 
 
 

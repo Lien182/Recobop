@@ -31,4 +31,4 @@ void     a9timer_caputure(t_a9timer * a9timer, t_a9timer_capture * capture, uint
         capture->tStart = a9timer_getvalue(a9timer);
     else
         capture->tStop  = a9timer_getvalue(a9timer);
-}__attribute__((always_inline));
+};

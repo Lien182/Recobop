@@ -60,11 +60,8 @@ THREAD_ENTRY()
 				uint32_t actindata  = 	input_linebuffer[buffer_pointer];	
 				for(k = 0; k < 3; k++)
 				{
-					#pragma HLS unroll factor=3
 					int32_t data = ((actindata >> 8*k) & 0x000000ff);
-	
 					tmp += data;
-
 				}
 				tmp /= 3;
 

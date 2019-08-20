@@ -68,7 +68,7 @@ typedef struct
 
 uint32_t    log_check	(t_log * log);
 void        log_deinit	(t_log * log);
-void        log_checkthread (t_log * log);
+void * 		log_checkthread(void * arg);
 void 		log_init (t_log * log, void * measurement_unit, uint32_t channel, uint32_t mode, char * filename, double scale, char * unit, uint32_t sleeptime);
 
 #endif

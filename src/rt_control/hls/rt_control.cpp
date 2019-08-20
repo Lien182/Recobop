@@ -105,16 +105,14 @@ void kalman(ap_fixed<N,M,AP_RND_CONV, ROUNDING>* u, ap_fixed<N,M,AP_RND_CONV, RO
 	}
 }
 
+//ugly but it works ;-)
 void restore_apfixed(uint32 src, ap_fixed<N,M,AP_RND_CONV, ROUNDING> * dest)
 {
 	for(int j = 0; j < N; j++)
 	{
 		(*dest)[j] = src & 1;
 		src >>= 1;
-	}
-
-
-	
+	}	
 }
 
 
@@ -147,48 +145,53 @@ THREAD_ENTRY() {
 	uint32 stack_addr[1];
 	uint32 threadid[1];
 	uint32 rc_flag[1];
+	*debug_port = 0;
+
 	{
-		//#pragma HLS PROTOCOL fixed
+		#pragma HLS PROTOCOL fixed
 		THREAD_INIT();
 		rb_info = GET_INIT_DATA();
-		MEM_READ( rb_info + 8,  demonstrator_nr , 4);
-		MEM_READ( rb_info + 16, stack_addr      , 4);
-		MEM_READ( rb_info + 24, threadid		, 4);
-
+		*debug_port = 1;
+		MEM_READ( rb_info + 8, demonstrator_nr , 4);
+		*debug_port = 2;
+		MEM_READ( rb_info + 28, stack_addr     , 4);
+		*debug_port = 3;
+		MEM_READ( rb_info + 36, threadid	   , 4);
+		*debug_port = 4;
+	}
 		//Restore the old context
 
-		{
-			//marshalling
-			MEM_READ(stack_addr[0], thread_stack,24*4);
-			int j = 0;
+	{
+		//marshalling
+		MEM_READ(stack_addr[0], thread_stack,24*4);
+		int j = 0;
 
-			for(int i = 0; i < 4; i++)
-				restore_apfixed(thread_stack[j++], &x[i] );
+		for(int i = 0; i < 4; i++)
+			restore_apfixed(thread_stack[j++], &x[i] );
 
-			for(int i = 0; i < 16; i++)
-				restore_apfixed(thread_stack[j++], &P[i] );
+		for(int i = 0; i < 16; i++)
+			restore_apfixed(thread_stack[j++], &P[i] );
 
-			restore_apfixed(thread_stack[j++], &error_x_last );
-			restore_apfixed(thread_stack[j++], &error_y_last );
-			restore_apfixed(thread_stack[j++], &u[0] );
-			restore_apfixed(thread_stack[j++], &u[1] );
-		}		
-
-
-
-		*debug_port = 0;
-	}
-
+		restore_apfixed(thread_stack[j++], &error_x_last );
+		restore_apfixed(thread_stack[j++], &error_y_last );
+		restore_apfixed(thread_stack[j++], &u[0] );
+		restore_apfixed(thread_stack[j++], &u[1] );
+		*debug_port = 5;
+	}		
+	
 	while (1) {	
 
 		ap_uint<32> pos;
+		uint32 tmp;
+
 		switch(demonstrator_nr[0])
 		{
 			case 0: pos.range(31,0) = MBOX_GET(touch_0_pos); break;
 			case 1: pos.range(31,0) = MBOX_GET(touch_1_pos); break;
 			case 2: pos.range(31,0) = MBOX_GET(touch_2_pos); break;
-			default: break;
+			default: pos.range(31,0) = MBOX_GET(touch_0_pos); break;
 		};
+		/*
 		if(demonstrator_nr[0] == 0)
 		{
 			#pragma HLS PROTOCOL fixed
@@ -196,7 +199,8 @@ THREAD_ENTRY() {
 			ap_wait();
 			*debug_port &= ~(1<<2);
 			ap_wait();
-		}	
+		}
+		*/	
 
 		
 
@@ -264,6 +268,7 @@ THREAD_ENTRY() {
 		cmd_y = (u[1] * rad2grad) << 6;
 
 
+		/*
 		if(demonstrator_nr[0] == 0)
 		{
 			#pragma HLS PROTOCOL fixed
@@ -273,6 +278,7 @@ THREAD_ENTRY() {
 			ap_wait();
 
 		}
+		 */
 		switch(demonstrator_nr[0])
 		{
 			case 0: for (int i = 0; i < 6; i++) MBOX_PUT(inverse_0_cmd, (cmd_x, cmd_y, (ap_uint<3>)i)); break;
@@ -284,29 +290,11 @@ THREAD_ENTRY() {
 		MEM_READ( rb_info + 20,  rc_flag , 4);
 		if(rc_flag[0] == 1)
 		{	
-		
-			//marshalling
-			int j = 0;
-
-			for(int i = 0; i < 4; i++)
-				thread_stack[j++] = x[i].range(N-1,0);
-			for(int i = 0; i < 16; i++)
-				thread_stack[j++] = P[i].range(N-1,0);
-	
-			thread_stack[j++] = error_x_last.range(N-1,0);
-			thread_stack[j++] = error_y_last.range(N-1,0);
-			thread_stack[j++] = u[0].range(N-1,0);
-			thread_stack[j++] = u[1].range(N-1,0);
-
-			MEM_WRITE(thread_stack,stack_addr[0],j*4);
-			while(MBOX_TRYPUT(reconfiguration_request, threadid[0]) != 1);
-			*debug_port |= (1<<5);
-
-			while(1);
-
+			break;
+			*debug_port = 6;
 		}
 
-
+		/* 
 	
 		if(demonstrator_nr[0] == 0)
 		{
@@ -317,5 +305,30 @@ THREAD_ENTRY() {
 			ap_wait();
 
 		}
+		*/
 	}
+
+			
+	//marshalling
+	int j = 0;
+
+	for(int i = 0; i < 4; i++)
+		thread_stack[j++] = x[i].range(N-1,0);
+	for(int i = 0; i < 16; i++)
+		thread_stack[j++] = P[i].range(N-1,0);
+
+	thread_stack[j++] = error_x_last.range(N-1,0);
+	thread_stack[j++] = error_y_last.range(N-1,0);
+	thread_stack[j++] = u[0].range(N-1,0);
+	thread_stack[j++] = u[1].range(N-1,0);
+
+	MEM_WRITE(thread_stack,stack_addr[0],j*4);
+	while(MBOX_TRYPUT(reconfiguration_0_request, threadid[0]) != 1);
+	*debug_port = 7;
+
+	stream_write(osif_hw2sw, OSIF_CMD_THREAD_EXIT);
+	*debug_port = 8;
+	while(1);
+
+
 }
