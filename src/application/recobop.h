@@ -31,11 +31,14 @@ struct recobop_info {
 };
 
 
-typedef struct {
+typedef struct 
+{
 	t_hdmi_input	hdmi_input;
+	uint32_t		rc_flag;
 	t_hdmi_output 	hdmi_output;
 	volatile struct reconos_thread *thread_p;
-} t_video_info;
+}
+t_video_info;
 
 
 static inline int rbi_thread_count_m(struct recobop_info *rb_info,

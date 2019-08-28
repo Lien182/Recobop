@@ -13,7 +13,7 @@
 
 
 #define MOTOR_ON 1
-#define DIRECTAXIACCESS 0
+#define DIRECTAXIACCESS 1
 
 
 #define KP -0.0008f
@@ -25,7 +25,7 @@
 #define FILE_LOG 1
 
 #define SIGMAINV 0.01f
-#define Q 16.0f
+#define Q 4.0f
 
 
 void kalman(float Ta, float* u, float* y, float* x, float * P)
@@ -268,8 +268,8 @@ THREAD_ENTRY() {
 
 #if 1
 		dd += 0.01;
-		target_x = 30 * cosf(dd);
-		target_y = 30 * sinf(dd);
+		target_x = 30 * cosf(dd)-30.0;
+		target_y = 30 * sinf(dd)-30.0;
 #endif
 
 #if 0

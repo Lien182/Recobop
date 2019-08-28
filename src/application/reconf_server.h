@@ -17,30 +17,26 @@
 #include <string.h>
 #include <sys/ioctl.h>
 
+#include "reconfig.h"
 
 #define RECONF_REQUEST_RGB2GRAY 100
 #define RECONF_REQUEST_SOBEL    200
 
-typedef struct 
-{
-     char * data;
-     size_t size;
-}
-t_bitstream;
-
 typedef struct
 {
     t_bitstream bitstreams[2];
+    uint32_t    nbitstreams;
     uint32_t    shutdown;
     pthread_t   thread;
     uint16_t    port;
     int         sockfd; 
+    uint32_t*   rc_flag;
+    struct mbox * reconf_mb;
+    struct reconos_thread*  rt;
 }
 t_reconf_server;
 
 
-
-
-uint32_t reconf_server_init(t_reconf_server * reconf_server, uint16_t port, char ** bitstreams);
+uint32_t reconf_server_init(t_reconf_server * reconf_server, uint16_t port, char ** bitstreams, uint32_t nbitstreams, uint32_t * rc_flag, struct reconos_thread *rt, struct mbox * recon_mb);
 
 #endif

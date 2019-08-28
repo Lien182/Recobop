@@ -19,13 +19,10 @@
 
 typedef struct
 {
+    uint32_t* image;
     int fd_fb;
-
     uint32_t width;
     uint32_t height;
-
-    uint32_t* image;
-
 }t_hdmi_output;
 
 

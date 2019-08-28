@@ -176,7 +176,7 @@ int main(int argc, char **argv) {
 
 
 	
-	/*
+	
 	if(hdmi_output_init(&(video_info.hdmi_output), "/dev/fb0") != 0)
 	{
 		printf("HDMI Output: Init error \n");
@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
 	{
 		printf("HDMI Output: Init error \n");
 	}
-	*/
+	
 
 	
 
@@ -242,7 +242,7 @@ int main(int argc, char **argv) {
 
 
 	//Scheduler Init
-	reconfig_scheduler_init(&(reconfig_scheduler));
+	//reconfig_scheduler_init(&reconfig_scheduler, &cycle_timer);
 
 	signal(SIGINT, exit_signal);
 	signal(SIGTERM, exit_signal);
@@ -250,6 +250,7 @@ int main(int argc, char **argv) {
 
 	printf("Initializing Info\n");
 	
+	/*
 	for(i = 0; i < 3; i++)
 	{
 		printf("Init Data on %x \n", (void *)&(rb_info[i]));		
@@ -262,82 +263,15 @@ int main(int argc, char **argv) {
 	rb_info[0].thread_p[2] = reconos_thread_create_hwt_control((void *)&(rb_info[i]));
 	rb_info[0].thread_p[3] = reconos_thread_create_hwt_inverse((void *)&(rb_info[i]));
 
-	
-	
-	reconfig_scheduler_register_new_slot(&(reconfig_scheduler), &(rb_info[0].thread_p[2]->init_data), reconfiguration_0_request);
-	reconfig_scheduler_register_new_slot(&(reconfig_scheduler), &(rb_info[0].thread_p[3]->init_data), reconfiguration_1_request);
+	*/
 
-	reconfig_scheduler_register_new_task(&(reconfig_scheduler), SLOTMASK_SLOT_0, 100 * sizeof(uint32_t),(void*) &(rb_info[0]), bitstream_control_0); 
-	reconfig_scheduler_register_new_task(&(reconfig_scheduler), SLOTMASK_SLOT_0, 100 * sizeof(uint32_t),(void*) &(rb_info[1]), bitstream_control_1);
-	reconfig_scheduler_register_new_task(&(reconfig_scheduler), SLOTMASK_SLOT_0, 100 * sizeof(uint32_t),(void*) &(rb_info[2]), bitstream_control_2);
-
-	reconfig_scheduler_register_new_task(&(reconfig_scheduler), SLOTMASK_SLOT_1, 100 * sizeof(uint32_t),(void*) &(rb_info[0]), bitstream_inverse_0); 
-	reconfig_scheduler_register_new_task(&(reconfig_scheduler), SLOTMASK_SLOT_1, 100 * sizeof(uint32_t),(void*) &(rb_info[1]), bitstream_inverse_1);
-	reconfig_scheduler_register_new_task(&(reconfig_scheduler), SLOTMASK_SLOT_1, 100 * sizeof(uint32_t),(void*) &(rb_info[2]), bitstream_inverse_2);
-
-	
-	//printf("Image adress: %x \n", (uint32_t)(video_info.hdmi_output.image));
-	//video_info.thread_p = reconos_thread_create_hwt_sobel((uint32_t)(video_info.hdmi_output.image));
+	rb_info[0].thread_p[1] = reconos_thread_create_swt_control  ((void *)&(rb_info[2]), 70);
+	rb_info[0].thread_p[4] = reconos_thread_create_swt_inverse  ((void *)&(rb_info[2]), 70);
 
 
-	
+	video_info.thread_p = reconos_thread_create_hwt_color2bw((uint32_t)(&(video_info.rc_flag)));
 
-		
-		
-#if 0
-	int sum = 1000;
-	float overhead;
-	double touch_sum = 0, control_sum = 0, inverse_sum = 0, overhead_sum = 0, power_sum;
-	for (i = 0; i < sum; i++) {
-		touch_sum += rbi_perf_touch(&rb_info);
-		control_sum += rbi_perf_control(&rb_info);
-		inverse_sum += rbi_perf_inverse(&rb_info);
-		power_sum += rbi_saw_power(&rb_info);
-		while ((overhead = rbi_perf_overhead(&rb_info)) > 10);
-		overhead_sum += overhead;
-		if (i % 100 == 0)
-			printf("%d\n", i);
-		usleep(20000);
-	}
 
-	printf("Evaluation:\n");
-	printf("  Touch: %f\n", touch_sum / sum);
-	printf("  Control: %f\n", control_sum / sum);t_diff_measurement * diff_measurement_timer_init( uint32_t base_addr )
-	printf("  Inverse: %f\n", inverse_sum / sum);
-	printf("  Overhead: %f\n", overhead_sum / sum);
-	printf("  Power: %f\n", power_sum / sum);
-#endif
-
-#if 0
-	while (1) {
-		printf("%f\n", rbi_saw_power(&rb_info));
-		usleep(50000);
-	}
-#endif
-
-#if 0
-	printf("Resetting platform ...\n");
-	for (i = 0; i < 6; i++)
-		mbox_put(inverse_cmd, 0 | 0 << 22 | 0 << 12 | 0 << 3 | i << 0);
-	sleep(1);
-#endif
-
-#if 0
-	printf("Testing touch controller ...\n");
-	while(1) {
-		pos = mbox_get(touch_pos);
-		pos_x = (pos >> 12) & 0xfff;
-		if (((pos_x >> 11) & 0x1) == 1) {
-			pos_x |= m << 12;
-		}
-		pos_y = (pos >> 0) & 0xfff;
-		if (((pos_y >> 11) & 0x1) == 1) {
-			pos_y |= m << 12;
-		}
-		printf("touch position is %d,%d\n", pos_x, pos_y);
-		mbox_get(touch_pos);
-	}
-#endif
 
 	for(i = 0; i < 3; i++)
 	{
@@ -370,28 +304,23 @@ int main(int argc, char **argv) {
 	}
 #endif
 
-	for(i = 0; i < 50; i++)
-	{
-		printf("%2d: %3.4f ", i, ((float)(rb_info[2].stackaddr_control)[i])/powf(2,19));
-		if((i%10) == 9)
-			printf("\n");
-	}
+
 
 	while(1) {
 
 	
-		x_pos = ((int32_t*)rb_info[2].pTouch)[0] & 0x0fff;
+		x_pos = ((int32_t*)rb_info[0].pTouch)[0] & 0x0fff;
 	
 		if(x_pos & 0x0800)
 			x_pos |= 0xfffff000;
-		y_pos = ((int32_t*)rb_info[2].pTouch)[1] & 0x0fff;
+		y_pos = ((int32_t*)rb_info[0].pTouch)[1] & 0x0fff;
 		if(y_pos & 0x0800)
 			y_pos |= 0xfffff000;
 
 		cyclecnt = ((int32_t*)rb_info[2].pTouch)[0] >> 12;		
 		touch_x = ((uint32_t*)rb_info[2].pTouch)[0];
 
-		//printf("main AXI: X: %x, Y: %x ;\n", x_pos, y_pos); 
+		printf("main AXI: X: %x, Y: %x ;\n", x_pos, y_pos); 
 /*
 		//if(touch_x_old != touch_x)
 			//a9timer_caputure(a9timer, &(log_touch_ctrl.a9timer_capture), A9TIMER_CAPTURE_START); 
@@ -415,32 +344,7 @@ int main(int argc, char **argv) {
 		printf("leg: %d, a: %3.6f, b: %3.6f \n",data & 7, alpha, beta);
 */	
 
-		usleep(100000);
-		printf("Going to set the inverse rc flag \n");
-		rb_info[2].rc_flag_inverse = 1;
-		rb_info[2].rc_flag_control = 1;
-		usleep(10000);
-		printf("Mailbox request: %d \n",mbox_get(reconfiguration_0_request));
-	
-	
-		usleep(1000000);
-		printf("Going to set the control rc flag \n");
-		
-		usleep(10000);
-
-		printf("Mailbox request: %d \n",mbox_get(reconfiguration_0_request));
-		printf("After RC flag is set... \n");
-		for(i = 0; i < 50; i++)
-		{
-			printf("%2d: %3.4f ", i, ((float)(rb_info[2].stackaddr_control)[i])/powf(2,19));
-			if((i%10) == 9)
-				printf("\n");
-		}
-
-		while(1){
-			sleep(2);
-			printf("Done... \n");
-		}
+		sleep(1);
 
 
 	}

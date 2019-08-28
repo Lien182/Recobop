@@ -1,7 +1,10 @@
 #ifndef RECONFIG_SETTINGS_H
 #define RECONFIG_SETTINGS_H
 
+#define RECONFIG_VERBOSE_DEBUG 0
+
+
 #define MAX_SLOTS   2
-#define MAX_THREADS 3
+#define MAX_THREADS 6
 
 #endif

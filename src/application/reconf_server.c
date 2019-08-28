@@ -9,8 +9,11 @@
 #include <sys/types.h> 
 #include <sys/socket.h> 
 #include <arpa/inet.h> 
-#include <netinet/in.h> 
+#include <netinet/in.h>
 
+
+#include "a9timer.h"
+#include "recobop.h"
 
 int32_t reconf_server_buffer_bitstream(char* filename, t_bitstream * bitstream)
 {
@@ -39,7 +42,7 @@ int32_t reconf_server_buffer_bitstream(char* filename, t_bitstream * bitstream)
         return 0;
 }
 
-int reconfigure(t_bitstream bitstream, uint32_t threadid, uint32_t partial){
+int reconf_server_reconfigure(t_bitstream bitstream, uint32_t threadid, uint32_t partial){
 	/* construct path of bitfile */
 
 
@@ -83,12 +86,14 @@ int reconfigure(t_bitstream bitstream, uint32_t threadid, uint32_t partial){
 
 void* reconf_server_thread(void * arg)
 {
-
+	uint32_t tStartRequest, tStartReconfiguration, tEndReconfiguration, tEndRequest;
 	t_reconf_server * reconf_server = (t_reconf_server*)arg;
 
+	struct hwslot *act_hwslot;
+    act_hwslot = reconf_server->rt->hwslot;
 
     struct sockaddr_in servaddr, cliaddr; 
-    int8_t buf[11];  
+    uint8_t buf[11];  
 	int32_t request; 
 
     // Creating socket file descriptor 
@@ -96,6 +101,11 @@ void* reconf_server_thread(void * arg)
         perror("[RECONF SERVER] Can not create a socket \n"); 
         exit(EXIT_FAILURE); 
     } 
+	else
+	{
+		perror("[RECONF SERVER] create socket \n");
+	}
+	
       
     memset(&servaddr, 0, sizeof(servaddr)); 
     memset(&cliaddr, 0, sizeof(cliaddr)); 
@@ -113,9 +123,11 @@ void* reconf_server_thread(void * arg)
       
     int len, n; 
 
-	while(!(reconf_server->shutdown))
+	while(1)
 	{
-		n = recvfrom(reconf_server->sockfd, (char *)buf, 10, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len); 
+		printf("[RECONF SERVER] wait for new reconfig request\n");
+		n = recvfrom(reconf_server->sockfd, (char *)buf, 10, MSG_WAITALL, ( struct sockaddr *) &servaddr, &len); 
+		tStartRequest = a9timer_getvalue(a9timer);
     	buf[n] = '\0'; 
     	printf("[RECONF SERVER] new reconf request %s\n", buf);
 
@@ -124,17 +136,35 @@ void* reconf_server_thread(void * arg)
 		switch(request)
 		{
 			case RECONF_REQUEST_RGB2GRAY: 
-				reconfigure(reconf_server->bitstreams[0], 0, 1);
+				printf("[RECONF SERVER] RECONF_REQUEST_RGB2GRAY\n");
+				*(reconf_server->rc_flag) = 1;
+				mbox_get(reconf_server->reconf_mb);
+				reconos_thread_suspend_block(reconf_server->rt);
+				*(reconf_server->rc_flag) = 0;
+				tStartReconfiguration = a9timer_getvalue(a9timer);
+				reconf_server_reconfigure(reconf_server->bitstreams[0], 0, 1);
+				tEndReconfiguration = a9timer_getvalue(a9timer);
+				reconos_thread_resume(reconf_server->rt,((int*)act_hwslot)[0]); 
+				tEndRequest = a9timer_getvalue(a9timer);
 				break;
 
-			case RECONF_REQUEST_SOBEL: 
+			case RECONF_REQUEST_SOBEL:
+				printf("[RECONF SERVER] RECONF_REQUEST_SOBEL\n"); 
+				*(reconf_server->rc_flag) = 1;
+				mbox_get(reconf_server->reconf_mb);
+				reconos_thread_suspend_block(reconf_server->rt);
+				*(reconf_server->rc_flag) = 0;
 				reconfigure(reconf_server->bitstreams[1], 0, 1);
+				reconos_thread_resume(reconf_server->rt,((int*)act_hwslot)[0]); 
 				break;
 
 			default: 
 				printf("[RECONF SERVER] invalid reconfiguration request! \n "); 
 				break;
 		}
+
+		printf("[RECONF SERVER]  Kernel switch took %3.4f ms\n", (double)(tEndReconfiguration - tStartReconfiguration)* 0.00000003);
+		printf("[RECONF SERVER]  Request took %3.4f ms\n", (double)(tEndRequest - tStartRequest)* 0.00000003);
 	}
 
 	close(reconf_server->sockfd); 
@@ -144,13 +174,17 @@ void* reconf_server_thread(void * arg)
 
 
 
-uint32_t reconf_server_init(t_reconf_server * reconf_server, uint16_t port, char ** bitstreams)
+uint32_t reconf_server_init(t_reconf_server * reconf_server, uint16_t port, char ** bitstreams, uint32_t nbitstreams, uint32_t * rc_flag, struct reconos_thread *rt, struct mbox * recon_mb)
 {
 	int i = 0;
 	reconf_server->port = port;
 	reconf_server->shutdown = 0;
+	reconf_server->nbitstreams;
+	reconf_server->rt = rt;
+	reconf_server->rc_flag = rc_flag;
+	reconf_server->reconf_mb = recon_mb;
 
-	for(i = 0; i < 2; i++)
+	for(i = 0; i < nbitstreams; i++)
 	{
 		reconf_server_buffer_bitstream(bitstreams[i], &(reconf_server->bitstreams[i]));
 	}

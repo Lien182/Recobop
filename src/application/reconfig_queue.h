@@ -19,4 +19,6 @@ void      reconfig_queue_init(t_reconfig_queue * reconfig_queue );
 void      reconfig_queue_enqueue(t_reconfig_queue * reconfig_queue, uint32_t slotid , uint32_t threadid);
 
 uint32_t  reconfig_queue_dequeue(t_reconfig_queue * reconfig_queue, uint32_t slotid);
+
+uint32_t  reconfig_queue_isempty(t_reconfig_queue * reconfig_queue);
 #endif
