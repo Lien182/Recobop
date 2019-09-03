@@ -1,20 +1,15 @@
+/********************************************************************          
+* axi_timer.h            -- user space driver for the axi_timer     *
+*                        	ip-core from vivado;                    *
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
+
 #ifndef AXI_TIMER_H
 #define AXI_TIMER_H
 
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
-#include <math.h>
-#include <signal.h>
-
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <pthread.h>
-
 
 //All offsets in DWORDS
 #define TIMER_AXI_REG_OFFSET_TCSR0	0x00000000

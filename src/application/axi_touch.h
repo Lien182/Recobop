@@ -1,21 +1,24 @@
 /********************************************************************          
-* memory.h           -- memory initialization; used by all other    *
-*                       userspace drivers which need to mmap areas  *
+* axi_touch.h            -- user space driver for the axi touch     *
+*                        	ip-core			                        *
 *                                                                   *  
 * Author(s):  Christian Lienen                                      *   
 *                                                                   *   
 ********************************************************************/
 
-#ifndef MEMORY_H
-#define MEMORY_H
+#ifndef AXI_TOUCH_H
+#define AXI_TOUCH_H
 
-int memfd;
+#include <stdint.h>
 
-int     memory_init();
-void    memory_deinit();
+typedef struct
+{
+	volatile uint32_t	POS_X;
+	volatile uint32_t 	POS_Y;
 
-#else 
+}t_axi_touch;
 
-extern int memfd;
+
+t_axi_touch * axi_touch_init( uint32_t base_addr);
 
 #endif

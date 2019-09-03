@@ -1,11 +1,20 @@
 #include "hdmi_output.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/ioctl.h>
+#include <linux/fb.h>
+
 
 uint32_t hdmi_output_init(t_hdmi_output * hdmi_output, char * device  )
 {
     int i = 0;
    	int bitspp = 0;
-
 
    	hdmi_output->fd_fb = open(device, O_RDWR);
    	if(hdmi_output->fd_fb <= 0)
@@ -32,6 +41,5 @@ uint32_t hdmi_output_init(t_hdmi_output * hdmi_output, char * device  )
 	for(i = 0; i < hdmi_output->height * hdmi_output->width; i++)
 			hdmi_output->image[i] = 0;
 	
-
 	return 0;
 }

@@ -15,11 +15,13 @@ int main(int argc, char **argv)
     int32_t port;
     char buf[10]; 
     struct sockaddr_in     servaddr; 
+    char * ip;
   
-    if( argc > 2)
-	{
-        port    = atoi(argv[1]);
-		request = atoi(argv[2]);
+    if( argc > 3)
+	{   
+        ip      = argv[1];
+        port    = atoi(argv[2]);
+		request = atoi(argv[3]);
 		printf("[RECONFIG CLIENT] Set Request to %d \n", request);
 	}
     else
@@ -27,7 +29,7 @@ int main(int argc, char **argv)
         printf("[RECONFIG CLIENT] Please choose a new filter for the demonstrator! \n");
         printf("[RECONFIG CLIENT] RECONF_REQUEST_RGB2GRAY  100\n");
         printf("[RECONFIG CLIENT] RECONF_REQUEST_SOBEL     200\n");
-        printf("[RECONFIG CLIENT] example: reconfig_client <port> <request>\n");
+        printf("[RECONFIG CLIENT] example: reconfig_client <ip> <port> <request>\n");
         exit(0);
     }
 
@@ -42,8 +44,7 @@ int main(int argc, char **argv)
     // Filling server information 
     servaddr.sin_family = AF_INET; 
     servaddr.sin_port = htons(port); 
-    servaddr.sin_addr.s_addr = INADDR_ANY; 
-      
+    inet_pton(AF_INET, ip, &servaddr.sin_addr);
     int n, len; 
       
     sprintf(buf,"%d",request);

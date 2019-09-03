@@ -1,5 +1,20 @@
+/********************************************************************          
+* axi_timer.c            -- user space driver for the axi_timer     *
+*                        	ip-core from vivado;                    *
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
+
 #include "axi_timer.h"
 #include "memory.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+#include <fcntl.h>
+#include <sys/mman.h>
 
 t_axi_timer * axi_timer_init( uint32_t base_addr)
 {
@@ -7,10 +22,9 @@ t_axi_timer * axi_timer_init( uint32_t base_addr)
 
 	axi_timer = (t_axi_timer *)mmap(0, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, memfd, base_addr);
 	if (axi_timer == MAP_FAILED) {
-		printf("Timer Init: Could not map memory\n");
+		printf("[AXI Timer] Init could not map memory\n");
 		return NULL;
 	}
-
 	return axi_timer;
 }
 
@@ -38,7 +52,6 @@ void axi_timer_start(t_axi_timer * axi_timer,uint32_t channel, uint32_t mode, ui
 			//Enable timer1 and external capture trigger timer 1
 			axi_timer->TCSR1 = (1<<8) | (1<<7) | (1<<3) | (1<<4) | (1<<0);
 		}
-
 	}
 
 }
@@ -49,6 +62,5 @@ void axi_timer_stop(t_axi_timer * axi_timer, uint32_t channel)
 		axi_timer->TCSR0 &= ~(1<<7);
 	if(channel & TIMER_AXI_START_CHANNEL_1)
 		axi_timer->TCSR1 &= ~(1<<7);
-	
 }
 

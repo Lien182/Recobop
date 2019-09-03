@@ -1,3 +1,11 @@
+/********************************************************************          
+* rt_color2bw.c        -- software rgb2gr implementation            *
+*                         transforms a color image to a black white * 
+*						  by averaging								*
+*																	* 
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
 #include "recobop.h"
 #include "reconos.h"
 

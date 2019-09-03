@@ -1,5 +1,5 @@
 /********************************************************************          
-* axi_timer.c            -- user space driver for the diff_timer    *
+* axi_touch.c            -- user space driver for the axi touch     *
 *                        	ip-core			                        *
 *                                                                   *  
 * Author(s):  Christian Lienen                                      *   
@@ -12,18 +12,18 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-#include "difference_measurement.h"
+#include "axi_touch.h"
 #include "memory.h"
 
-t_diff_measurement * diff_timer_init( uint32_t base_addr )
+t_axi_touch * axi_touch_init( uint32_t base_addr)
 {
-	t_diff_measurement * diff_timer;
+	t_axi_touch * axi_touch;
 
-	diff_timer = (t_diff_measurement *)mmap(0, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, memfd, base_addr);
-	if (diff_timer == MAP_FAILED) {
-		printf("[Difference Timer] Init could not map memory\n");
+	axi_touch = mmap(0, 0x10000, PROT_READ| PROT_WRITE, MAP_SHARED | MAP_POPULATE, memfd, base_addr);
+	if (axi_touch == MAP_FAILED) {
+		printf("[AXI Touch] ERROR: Could not map memory\n");
 		return NULL;
 	}
 
-	return diff_timer;
+	return axi_touch;
 }

@@ -1,11 +1,18 @@
+/********************************************************************          
+* rt_sobel.c           -- software sobel implementation             *
+*                         calculated the sobel operation for        *
+*                         all three color channels                  * 
+*																	* 
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
+
 #include "recobop.h"
 #include "reconos.h"
-
 #include "reconos_thread.h"
 #include "reconos_calls.h"
 #include "utils.h"
-#include "hdmi_input.h"
-#include "hdmi_output.h"
+#include "hdmi.h"
 
 #include <math.h>
 #include <stdio.h>

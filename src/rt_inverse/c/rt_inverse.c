@@ -101,7 +101,7 @@ THREAD_ENTRY() {
 
 		float v_s_aj_x, v_s_aj_y, v_s_aj_z;
 		float v_s_aj_l_min, v_s_aj_l;
-		unsigned int v_s_aj_l_mina;
+		unsigned int v_s_aj_l_mina = 0;
 
 
 		// transform into base coordinatesystem

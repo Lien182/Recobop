@@ -1,11 +1,17 @@
+/********************************************************************          
+* queue.c           -- queue structure for the reconf server        *
+*                                                                   *
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
+
 #include "queue.h"
 #include <stdio.h>
 #include <sys/mman.h>
 #include <limits.h>
 #include <string.h>
 #include <pthread.h>
-
-
 
 int queue_init(t_queue * queue, uint32_t size)
 {

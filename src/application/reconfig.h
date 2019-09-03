@@ -12,6 +12,12 @@
 
 #define SLOTMASK_SLOT_0 0x00000001
 #define SLOTMASK_SLOT_1 0x00000002
+#define SLOTMASK_SLOT_2 0x00000004
+#define SLOTMASK_SLOT_3 0x00000008
+#define SLOTMASK_SLOT_4 0x00000010
+#define SLOTMASK_SLOT_5 0x00000020
+#define SLOTMASK_SLOT_6 0x00000040
+#define SLOTMASK_SLOT_7 0x00000080
 
 #define TASKSTATE_RUNNING     0x00000001
 #define TASKSTATE_STOP        0x00000002
@@ -38,6 +44,7 @@ typedef struct
 
 typedef struct 
 {
+    uint32_t                breconfigurable;
     uint32_t                slotid;
     pthread_t               reconfig_dispatcher_thread;
     struct mbox             *mb_reconfig_request;     
@@ -46,9 +53,6 @@ typedef struct
     struct reconos_thread   *recon_thread;
     pthread_mutex_t         *reconfiguration_mutex;    
 }t_reconfig_slot;
-
-
-
 
 typedef struct 
 {

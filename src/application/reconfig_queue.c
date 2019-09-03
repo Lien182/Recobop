@@ -28,7 +28,7 @@ uint32_t reconfig_queue_isempty(t_reconfig_queue * reconfig_queue)
         int i;
         for(i = 0; i < MAX_SLOTS; i++)
         {
-                if(0 == queue_isempty(&(reconfig_queue->slotqueue)))
+                if(0 == queue_isempty(&(reconfig_queue->slotqueue[i])))
                         return 0UL;
         }
         return 1UL;

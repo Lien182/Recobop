@@ -1,3 +1,10 @@
+/********************************************************************          
+* queue.h           -- queue structure for the reconf server        *
+*                                                                   *
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
 #ifndef QUEUE_H
 #define QUEUE_H
 

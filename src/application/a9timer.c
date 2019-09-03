@@ -1,6 +1,19 @@
+/********************************************************************          
+* a9timer.c             -- 	source for the global a9 timer from the *
+*                        	cortex-a9 processor in the Zynq Soc     *
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
 #include "a9timer.h"
 #include "memory.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+
+//Location and size are fixed
 #define MAP_SIZE 4096UL
 #define MAP_MASK (MAP_SIZE - 1)
 #define MAP_BASEADR 0xF8F00200
@@ -11,7 +24,7 @@ t_a9timer * a9timer_init( void )
 
 	timer = (t_a9timer *)mmap(0, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, memfd, MAP_BASEADR & ~MAP_MASK );
 	if (timer == MAP_FAILED) {
-		printf("Timer Init: Could not map memory\n");
+		printf("[A9 Timer] Init could not map memory\n");
 		return NULL;
 	}
 

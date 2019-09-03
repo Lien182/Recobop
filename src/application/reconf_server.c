@@ -44,8 +44,6 @@ int32_t reconf_server_buffer_bitstream(char* filename, t_bitstream * bitstream)
 
 int reconf_server_reconfigure(t_bitstream bitstream, uint32_t threadid, uint32_t partial){
 	/* construct path of bitfile */
-
-
 	int fd_partial = open("/sys/devices/soc0/amba/f8007000.devcfg/is_partial_bitstream", O_RDWR);
 	if(fd_partial < 0){
 		printf("[RECONF SERVER] Failed to open xdevcfg attribute 'is_partial_bitstream' when configuring threadid %d\n",threadid);
@@ -86,14 +84,14 @@ int reconf_server_reconfigure(t_bitstream bitstream, uint32_t threadid, uint32_t
 
 void* reconf_server_thread(void * arg)
 {
-	uint32_t tStartRequest, tStartReconfiguration, tEndReconfiguration, tEndRequest;
+	uint32_t tStartRequest= 0, tStartReconfiguration= 0, tEndReconfiguration = 0, tEndRequest= 0;
 	t_reconf_server * reconf_server = (t_reconf_server*)arg;
 
 	struct hwslot *act_hwslot;
     act_hwslot = reconf_server->rt->hwslot;
 
     struct sockaddr_in servaddr, cliaddr; 
-    uint8_t buf[11];  
+    char buf[11];  
 	int32_t request; 
 
     // Creating socket file descriptor 
@@ -121,7 +119,8 @@ void* reconf_server_thread(void * arg)
         exit(EXIT_FAILURE); 
     } 
       
-    int len, n; 
+    int n; 
+	socklen_t len;
 
 	while(1)
 	{
@@ -154,12 +153,14 @@ void* reconf_server_thread(void * arg)
 				mbox_get(reconf_server->reconf_mb);
 				reconos_thread_suspend_block(reconf_server->rt);
 				*(reconf_server->rc_flag) = 0;
-				reconfigure(reconf_server->bitstreams[1], 0, 1);
+				reconf_server_reconfigure(reconf_server->bitstreams[1], 0, 1);
 				reconos_thread_resume(reconf_server->rt,((int*)act_hwslot)[0]); 
 				break;
 
 			default: 
 				printf("[RECONF SERVER] invalid reconfiguration request! \n "); 
+				tEndReconfiguration = tStartReconfiguration;
+				tEndRequest = tStartRequest;
 				break;
 		}
 
@@ -179,7 +180,7 @@ uint32_t reconf_server_init(t_reconf_server * reconf_server, uint16_t port, char
 	int i = 0;
 	reconf_server->port = port;
 	reconf_server->shutdown = 0;
-	reconf_server->nbitstreams;
+	reconf_server->nbitstreams = nbitstreams;
 	reconf_server->rt = rt;
 	reconf_server->rc_flag = rc_flag;
 	reconf_server->reconf_mb = recon_mb;

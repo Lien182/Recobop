@@ -1,17 +1,34 @@
+/********************************************************************          
+* hdmi_input.c           -- hdmi userspace input driver based on    *
+*                        	v4l examples                            *
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
 #include "hdmi_input.h"
-#include <errno.h>
 #include "reconos.h"
 #include "reconos_calls.h"
 
+#include <errno.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/ioctl.h>
+#include <linux/videodev2.h>
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
+
+//structures and enums are only used in this source file
 enum io_method {
 	IO_METHOD_READ,
 	IO_METHOD_MMAP,
 	IO_METHOD_USERPTR,
 };
-
 struct buffer {
 	void   *start;
 	size_t  length;
@@ -98,8 +115,6 @@ static void init_mmap(t_hdmi_input * hdmi_input)
 
 void* hdmi_input_buffer_thread(void * arg)
 {
-
-
 	struct v4l2_buffer buf;
 	t_hdmi_input * hdmi_input = (t_hdmi_input*)arg;
 
@@ -143,6 +158,9 @@ uint32_t hdmi_input_init(t_hdmi_input * hdmi_input, char * device , struct mbox 
 	struct v4l2_cropcap cropcap;
 	struct v4l2_crop crop;
 	struct v4l2_format fmt;
+	enum   v4l2_buf_type type;
+	struct v4l2_bt_timings timing;
+	uint32_t i;
 
     hdmi_input->mb = buffer_pointer;
 
@@ -150,33 +168,32 @@ uint32_t hdmi_input_init(t_hdmi_input * hdmi_input, char * device , struct mbox 
 
 	if (-1 == hdmi_input->fd) 
     {
-		fprintf(stderr, "Cannot open '%s': %d, %s\n", device, errno, strerror(errno));
+		fprintf(stderr, "[HDMI INPUT] Cannot open '%s': %d, %s\n", device, errno, strerror(errno));
 		return -1;
 	}
 
 	if (-1 == xioctl(hdmi_input->fd, VIDIOC_QUERYCAP, &cap)) 
     {
-        fprintf(stderr, "%s is no V4L2 device\n", device);
+        fprintf(stderr, "[HDMI INPUT] %s is no V4L2 device\n", device);
         return -2;
 	}
 
-	if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-		fprintf(stderr, "%s is no video capture device\n",device);
+	if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) 
+	{
+		fprintf(stderr, "[HDMI INPUT] %s is no video capture device\n",device);
 		return -3;
 	}
 
-    if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-            fprintf(stderr, "%s does not support streaming i/o\n",  device);
-            return -3;
+    if (!(cap.capabilities & V4L2_CAP_STREAMING)) 
+	{
+        fprintf(stderr, "[HDMI INPUT] %s does not support streaming i/o\n",  device);
+        return -4;
     }
 
-
-
 	/* Select video input, video standard and tune here. */
-
 	CLEAR(cropcap);
-
 	cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
 
 	if (0 == xioctl(hdmi_input->fd, VIDIOC_CROPCAP, &cropcap)) {
 		crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -192,11 +209,7 @@ uint32_t hdmi_input_init(t_hdmi_input * hdmi_input, char * device , struct mbox 
 				break;
 			}
 		}
-	} else {
-		/* Errors ignored. */
-	}
-
-
+	} 
 
 	CLEAR(fmt);
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -209,18 +222,11 @@ uint32_t hdmi_input_init(t_hdmi_input * hdmi_input, char * device , struct mbox 
 		errno_exit("VIDIOC_S_FMT");
 
 
-	printf("Input screen : width: %d , height: %d\n", fmt.fmt.pix.width, fmt.fmt.pix.height );
+	printf("[HDMI INPUT] Input screen : width: %d , height: %d\n", fmt.fmt.pix.width, fmt.fmt.pix.height );
 
 	init_mmap(hdmi_input);
 
-
-
-	unsigned int i;
-	enum v4l2_buf_type type;
-
-	struct v4l2_bt_timings timing;
-
-
+	//Create video buffers
 	for (i = 0; i < n_buffers; ++i) {
 		struct v4l2_buffer buf;
 
@@ -240,9 +246,8 @@ uint32_t hdmi_input_init(t_hdmi_input * hdmi_input, char * device , struct mbox 
 			errno_exit("VIDIOC_QUERY_DV_TIMINGS");
 
 
-	printf("width: %d, height: %d \n", timing.width, timing.height);
 
-
+	//Start thread for image requesting
     if(pthread_create(&(hdmi_input->thread), 0, &hdmi_input_buffer_thread, (void*)hdmi_input) != 0)
 	{
 		printf("[HDMI output] Error during check thread starting \n");

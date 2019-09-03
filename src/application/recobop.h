@@ -26,88 +26,16 @@ struct recobop_info {
 	volatile uint32_t  rc_flag_inverse; 	// Offset +32
 	volatile uint32_t  threadid_inverse;	// Offset +36
 
+	volatile uint32_t  rc_flag_touch; 		// Offset +40
+	volatile uint32_t  threadid_touch;		// Offset +44
+	volatile uint32_t  rc_flag_servo; 		// Offset +48
+	volatile uint32_t  threadid_servo;		// Offset +52
+
 	volatile int thread_count;
 	volatile struct reconos_thread *thread_p[4];
 };
 
 
-typedef struct 
-{
-	t_hdmi_input	hdmi_input;
-	uint32_t		rc_flag;
-	t_hdmi_output 	hdmi_output;
-	volatile struct reconos_thread *thread_p;
-}
-t_video_info;
-
-
-static inline int rbi_thread_count_m(struct recobop_info *rb_info,
-                                     char *thread_name, int thread_mode) {
-	int i, count = 0;
-	struct reconos_thread *rt;
-
-	for (i = 0; i < 16; i++) {
-		rt = rb_info->thread_p[i];
-		if (!rt) {
-			continue;
-		}
-
-		if (strcmp(thread_name, rt->name) == 0)
-			if (   (  rt->state == RECONOS_THREAD_STATE_RUNNING_HW
-				    && thread_mode == RECONOS_THREAD_HW)
-			    || (  rt->state == RECONOS_THREAD_STATE_RUNNING_SW
-			    	&& thread_mode == RECONOS_THREAD_SW)) {
-				count++;
-			}
-	}
-
-	return count;
-}
-
-static inline int rbi_thread_count(struct recobop_info *rb_info,
-                                   char *thread_name) {
-	return   rbi_thread_count_m(rb_info, thread_name, RECONOS_THREAD_SW)
-	       + rbi_thread_count_m(rb_info, thread_name, RECONOS_THREAD_HW);
-}
-
-static inline int rbi_thread_index(struct recobop_info *rb_info,
-                                   char *thread_name, int thread_mode) {
-	int i;
-	struct reconos_thread *rt;
-
-	for (i = 0; i < 16; i++) {
-		rt = rb_info->thread_p[i];
-		if (!rt) {
-			continue;
-		}
-
-		if (   strcmp(thread_name, rt->name) == 0 
-			&& rt->state == RECONOS_THREAD_STATE_RUNNING_HW
-			&& thread_mode == RECONOS_THREAD_HW) {
-			return i;
-		}
-
-		if (   strcmp(thread_name, rt->name) == 0 
-			&& rt->state == RECONOS_THREAD_STATE_RUNNING_SW
-			&& thread_mode == RECONOS_THREAD_SW) {
-			return i;
-		}
-	}
-
-	return -1;
-}
-
-static inline int rbi_thread_index_free(struct recobop_info *rb_info) {
-	int i;
-
-	for (i = 0; i < 16; i++) {
-		if (!rb_info->thread_p[i]) {
-			return i;
-		}
-	}
-
-	return -1;
-}
 
 static inline uint32_t fltofi(float f, int n, int dn) {
 	int i;

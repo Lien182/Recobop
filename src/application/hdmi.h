@@ -1,26 +1,27 @@
 /********************************************************************          
-* hdmi_input.c           -- hdmi userspace output driver            *
+* hdmi.c           -- hdmi structure for hdmi input output          *
 *                                                                   *
 *                                                                   *  
 * Author(s):  Christian Lienen                                      *   
 *                                                                   *   
 ********************************************************************/
 
-#ifndef HDMI_OUTPUT_H
-#define HDMI_OUTPUT_H
+#ifndef HDMI_H
+#define HDMI_H
 
 #include <stdint.h>
+#include "hdmi_input.h"
+#include "hdmi_output.h"
 
-typedef struct
+typedef struct 
 {
-    uint32_t* image;    //important that image is the first element
-    int fd_fb;
-    uint32_t width;
-    uint32_t height;
-}t_hdmi_output;
+	t_hdmi_input	hdmi_input;
+	//Positon in the struct is important for the memory access by the video hardware threads
+	uint32_t		rc_flag;	
+	t_hdmi_output 	hdmi_output;
+	struct reconos_thread *thread_p;
+}
+t_hdmi;
 
-
-
-uint32_t hdmi_output_init(t_hdmi_output * hdmi_output, char * device  );
 
 #endif

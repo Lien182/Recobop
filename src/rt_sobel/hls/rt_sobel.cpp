@@ -1,3 +1,12 @@
+/********************************************************************          
+* rt_sobel.cpp         -- hardware sobel implementation             *
+*                         calculated the sobel operation for        *
+*                         all three color channels                  * 
+*																	* 
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
+
 #include "reconos_thread.h"
 #include "reconos_calls.h"
 
@@ -57,20 +66,6 @@ THREAD_ENTRY()
 			ap_wait();
 			address=MBOX_GET(video_cmd);
 		}
-
-		/*
-			
-		if(address != 0)
-		{
-			#pragma HLS PROTOCOL fixed
-			*debug_port |= (1<<2);
-			ap_wait();
-			*debug_port &= ~(1<<2);
-			ap_wait();
-
-		}
-		*/
-
 
 		//address <<=2;
 		MEM_READ( address, input_linebuffer, INPUT_PREFETCH_SIZE);

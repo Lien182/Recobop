@@ -1,26 +1,28 @@
 /********************************************************************          
-* hdmi_input.c           -- hdmi userspace output driver            *
-*                                                                   *
+* axi_servo.h            -- user space driver for the axi servo     *
+*                        	ip-core			                        *
 *                                                                   *  
 * Author(s):  Christian Lienen                                      *   
 *                                                                   *   
 ********************************************************************/
 
-#ifndef HDMI_OUTPUT_H
-#define HDMI_OUTPUT_H
+#ifndef AXI_SERVO_H
+#define AXI_SERVO_H
 
 #include <stdint.h>
 
 typedef struct
 {
-    uint32_t* image;    //important that image is the first element
-    int fd_fb;
-    uint32_t width;
-    uint32_t height;
-}t_hdmi_output;
+	volatile uint32_t	SERVO_0;
+	volatile uint32_t 	SERVO_1;
+	volatile uint32_t	SERVO_2;
+	volatile uint32_t 	SERVO_3;
+	volatile uint32_t	SERVO_4;
+	volatile uint32_t	SERVO_5;
+
+}t_axi_servo;
 
 
-
-uint32_t hdmi_output_init(t_hdmi_output * hdmi_output, char * device  );
+t_axi_servo * axi_servo_init( uint32_t base_addr);
 
 #endif

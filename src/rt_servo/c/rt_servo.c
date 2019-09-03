@@ -1,3 +1,11 @@
+/********************************************************************          
+* rt_servo.c           -- software servo thread implementation      *
+*                                                                   *
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
+
 #include "recobop.h"
 #include "reconos.h"
 #include "reconos_thread.h"
@@ -11,15 +19,8 @@
 
 THREAD_ENTRY() {
 	struct recobop_info *rb_info;
-	int i;
 	struct reconos_thread * rt;
-	uint32_t x_pos, y_pos;
-
 	uint32_t cmd = 0;
-	
-#if DEBUG == 1
-	double dd = 0.0;
-#endif
 
 
 	THREAD_INIT();
@@ -30,13 +31,13 @@ THREAD_ENTRY() {
 		
 		switch(rb_info->demo_nr)
 		{
-			case 0: cmd = mbox_get(servo_0_cmd);break;
-			case 1: cmd = mbox_get(servo_1_cmd);break;
-			case 2: cmd = mbox_get(servo_2_cmd);break;
+			case 0: cmd = mbox_get(servo_0_cmd); break;
+			case 1: cmd = mbox_get(servo_1_cmd); break;
+			case 2: cmd = mbox_get(servo_2_cmd); break;
 		}
-
+#if DEBUG == 1
 		printf("[rt_servo %d] Got new data from inverse\n",rb_info->demo_nr);
-
+#endif
 		((uint32_t*)(rb_info->pServo))[(cmd >> 18) & 7] = cmd >> 21;
 
 

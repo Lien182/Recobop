@@ -25,8 +25,6 @@ uint32_t log_check(t_log * log)
 		
 	}
 	
-
-	
 	if(log->bStart) // Difference makes no sense for the first sample
 	{
 		

@@ -1,3 +1,12 @@
+/********************************************************************          
+* reconfig_scheduler.c -- 	functions for the reconfig scheduler    *
+*                        	handels slots and tasks for the slots;  *
+*							scheduler is called by the cycle timer	* 
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/  
+
 #include "reconfig.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,6 +30,7 @@ void * reconfig_scheduler_schedule(void * arg)
 		printf("[Reconfig Scheduler] Fill the queue \n");
 
 
+		/*Example for the scheduling policy; every thread is called in every cycle once. */
 		reconfig_queue_enqueue(&(reconfig_scheduler->reconfig_queue), 0, 0);
 		reconfig_queue_enqueue(&(reconfig_scheduler->reconfig_queue), 0, 1);
 		reconfig_queue_enqueue(&(reconfig_scheduler->reconfig_queue), 0, 2);
@@ -140,7 +150,16 @@ int32_t reconfig_scheduler_buffer_bitstream(char* filename, t_bitstream * bitstr
 int32_t reconfig_scheduler_free_bitstream(t_bitstream bitstream)
 {
 	if(bitstream.data != NULL)
+	{
 		free(bitstream.data);
+		return 0;
+	}
+	else
+	{
+		return -1;
+	}
+	
+		
 }
 
 
@@ -165,23 +184,23 @@ int32_t reconfig_scheduler_register_new_slot(t_reconfig_scheduler * reconfig_sch
 		reconfig_scheduler->slotset[slotid].mb_reconfig_request = mb_reconfig_request;
 		reconfig_scheduler->slotset[slotid].reconfiguration_mutex = &(reconfig_scheduler->reconfiguration_mutex);
 		
-	
-		printf("[Reconfig Scheduler] Buffer bitstream %s \n", initial_bitstream);
-		reconfig_scheduler_buffer_bitstream(initial_bitstream, &init_bitstream);
-		reconfig_dispatcher_reconfigure(init_bitstream, 0xff, 1);
-#ifdef RECONF
-		reconfig_scheduler->slotset[slotid].recon_thread = reconos_thread_create_hwt_reconf(init_data);	
-#else
-	#warning No reconf slot defined
+		if(initial_bitstream == NULL)
+		{
+			printf("[Reconfig Scheduler] No bitstream, use context switching without reconfiguration\n");
+			reconfig_scheduler->slotset[slotid].breconfigurable = 0UL;			
+		}
+		else
+		{
+			printf("[Reconfig Scheduler] Buffer bitstream %s \n", initial_bitstream);
+			reconfig_scheduler->slotset[slotid].breconfigurable = 0UL;
+			reconfig_scheduler_buffer_bitstream(initial_bitstream, &init_bitstream);
+			reconfig_dispatcher_reconfigure(init_bitstream, 0xff, 1);
+#if RECONFIG_ENABLE == 1
+			reconfig_scheduler->slotset[slotid].recon_thread = reconos_thread_create_hwt_reconf(init_data);	
 #endif
-		//if(slotid == 1)
+		}
+
 		reconfig_dispatcher_init(&(reconfig_scheduler->slotset[slotid]));
-
-		//Start the new thread
-		
-		
-		//reconos_thread_resume(reconfig_scheduler->slotset[slotid].recon_thread, slotid + 6);
-
 		reconfig_scheduler->slotset_size++;
 		return slotid;
 	}

@@ -1,3 +1,12 @@
+/********************************************************************          
+* rt_color2bw.cpp      -- hardware rgb2gr implementation            *
+*                         transforms a color image to a black white * 
+*						  by averaging								*
+*																	* 
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
+
 #include "reconos_thread.h"
 #include "reconos_calls.h"
 

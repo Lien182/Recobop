@@ -3,6 +3,7 @@
 
 #define RECONFIG_VERBOSE_DEBUG 0
 
+#define RECONFIG_ENABLE 0
 
 #define MAX_SLOTS   2
 #define MAX_THREADS 6
