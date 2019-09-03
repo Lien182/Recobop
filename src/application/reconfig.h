@@ -1,7 +1,13 @@
+/********************************************************************          
+* reconfig.h    -- reconfiguration header for both scheduler and    *
+*                  the remote reconfiguration server                *
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
+
 #ifndef RECONFIG_H
 #define RECONFIG_H
-
-//DEFINES
 
 #include <pthread.h>
 #include <stdint.h>

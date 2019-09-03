@@ -1,4 +1,12 @@
 
+/********************************************************************          
+* control.cpp    -hardware implementation inverse thread function	*
+*                        				                            *
+*                                                                   *  
+* Author(s): Christoph Rueting, Christian Lienen                    *   
+*                                                                   *   
+********************************************************************/
+
 #include "reconos_thread.h"
 #include "reconos_calls.h"
 

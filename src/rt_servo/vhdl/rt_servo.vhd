@@ -1,3 +1,10 @@
+--/********************************************************************          
+--* rt_servo.vhd     -hardware implementation servo thread function	  *
+--*                        				                              *
+--*                                                                   *  
+--* Author(s): Christoph Rueting, Christian Lienen                    *   
+--*                                                                   *   
+--********************************************************************/
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;

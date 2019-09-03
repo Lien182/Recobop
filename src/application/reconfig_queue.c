@@ -1,12 +1,16 @@
-#include "reconfig_queue.h"
-#include <stdio.h>
-#include <sys/mman.h>
-#include <limits.h>
+/********************************************************************          
+* reconfig_queue.c   -- reconfiguration queue mainly implements     *
+*                       an array of queueus for the scheduler       *
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
 
+#include "reconfig_queue.h"
 
 void reconfig_queue_init(t_reconfig_queue * reconfig_queue )
 {
-        int i;
+        uint32_t i;
         for(i = 0;  i < MAX_SLOTS; i++)
                 queue_init(&(reconfig_queue->slotqueue)[i], MAX_THREADS);
 }

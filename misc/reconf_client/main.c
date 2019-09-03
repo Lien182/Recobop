@@ -1,3 +1,10 @@
+/********************************************************************          
+* main.c             -- 	client application for the remote       *
+*                        	reconfiguration server                  *
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <unistd.h> 

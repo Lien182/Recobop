@@ -1,3 +1,10 @@
+/********************************************************************          
+* reconf_server.h -- 	remote reconfiguration server               *
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/  
+
 #ifndef RECONF_SERVER_H
 #define RECONF_SERVER_H
 

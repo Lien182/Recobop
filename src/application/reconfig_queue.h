@@ -1,7 +1,14 @@
+/********************************************************************          
+* reconfig_queue.c   -- reconfiguration queue mainly implements     *
+*                       an array of queueus for the scheduler       *
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
+
 #ifndef RECONFIG_QUEUE_H
 #define RECONFIG_QUEUE_H
 
-#include <pthread.h>
 #include <stdint.h>
 #include "queue.h"
 #include "reconfig_settings.h"

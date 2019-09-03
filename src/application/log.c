@@ -1,6 +1,15 @@
+/********************************************************************          
+* log.c           -- log unit; it can check all used time sources   *
+*                    for differences in the capture values and      *
+*					 and writes the resulting time in stdout or 	*
+*					 in a file*										*
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
+
 #include "log.h"
 
-//Internal defines
 
 
 #define LOG_INTERNAL_MODE_SINGLE		0x00000004

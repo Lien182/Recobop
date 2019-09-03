@@ -1,5 +1,5 @@
 /********************************************************************          
-* rt_servo.c           -- software servo thread implementation      *
+* rt_servo.c  -- software servo thread implementation      			*
 *                                                                   *
 *                                                                   *  
 * Author(s):  Christian Lienen                                      *   

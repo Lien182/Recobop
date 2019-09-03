@@ -1,3 +1,12 @@
+/********************************************************************          
+* reconf_server.c -- 	remote reconfiguration server;              *
+*						parts are overtaken from the ReconOS        *
+*						reconfiguration example						*
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/  
+
 #include "reconf_server.h"
 #include <errno.h>
 #include "reconos.h"

@@ -1,3 +1,12 @@
+/********************************************************************          
+* log.h           -- log unit; it can check all used time sources   *
+*                    for differences in the capture values and      *
+*					 and writes the resulting time in stdout or 	*
+*					 in a file*										*
+*                                                                   *  
+* Author(s):  Christian Lienen                                      *   
+*                                                                   *   
+********************************************************************/
 #ifndef LOG_H
 #define LOG_H
 
@@ -30,22 +39,20 @@ typedef struct
 	uint32_t mode;
 	FILE * fd;
 	char * filename;
-	t_axi_timer * timer;
-	t_diff_measurement * diff_measurement;
-	uint32_t lasttimervalue;
-	
-	
-	uint64_t samplecnt; 
 
+	uint32_t lasttimervalue;
+	uint64_t samplecnt; 
 	double scale;
 	char * unit;
-
 	pthread_t thread;
     uint32_t bStart;
 	uint32_t bStop;
 
+	//Different time source
 	t_a9timer * a9timer;
 	t_a9timer_capture a9timer_capture;
+	t_axi_timer * timer;
+	t_diff_measurement * diff_measurement;
 
 
 }t_log;

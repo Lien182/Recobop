@@ -1,37 +1,27 @@
+/********************************************************************          
+* main.c           -       main function							*
+*                        				                            *
+*                                                                   *  
+* Author(s): Christoph Rueting, Christian Lienen                    *   
+*                                                                   *   
+********************************************************************/
 #include "recobop.h"
 
 #include "reconos.h"
 #include "reconos_app.h"
-#include "mbox.h"
 
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <math.h>
 #include <signal.h>
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <pthread.h>
-
-#include "log.h"
-#include "axi_timer.h"
 #include "a9timer.h"
-#include "difference_measurement.h"
 #include "memory.h"
 #include "cycle_timer.h"
 #include "axi_touch.h"
 #include "axi_servo.h"
-
-#include "reconfig.h"
 #include "hdmi.h"
-
-#define MAX_ANGLE 60
-#define SLEEP 20000
 
 #define BOP_0_TOUCH_BASE_ADDR 0x43C10000
 #define BOP_0_SERVO_BASE_ADDR 0x43C00000
@@ -40,28 +30,11 @@
 #define BOP_2_TOUCH_BASE_ADDR 0x43C50000
 #define BOP_2_SERVO_BASE_ADDR 0x43C60000
 
-#define AXI_TIMER_0_ADDR	0x42800000
-#define AXI_TIMER_1_ADDR	0x42810000
-
-
-char * bitstream_control_0[1] = {"control_0_slot_0.bit"};
-char * bitstream_inverse_0[1] = {"inverse_0_slot_1.bit"};
-char * bitstream_control_1[1] = {"control_1_slot_0.bit"};
-char * bitstream_inverse_1[1] = {"inverse_1_slot_1.bit"};
-char * bitstream_control_2[1] = {"control_2_slot_0.bit"};
-char * bitstream_inverse_2[1] = {"inverse_2_slot_1.bit"};
-
-
-
 
 volatile struct recobop_info rb_info[3];
 
 t_hdmi video_info;
 
-
-inline double radians(double deg) {
-	return deg * (M_PI / 180.0);
-}
 
 static void exit_signal(int sig) 
 {

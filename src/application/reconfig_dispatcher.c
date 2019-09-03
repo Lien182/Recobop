@@ -1,6 +1,8 @@
 /********************************************************************          
 * reconfig_dispatcher.c -- functions for context switching          *
-*                           reconfiguration of ReconOS slots        *   
+*                          reconfiguration of ReconOS slots         *   
+*			   parts are overtaken from the ReconOS     *
+*			   reconfiguration example		    *
 *                                                                   *   
 * Author(s):  Christian Lienen                                      *   
 *                                                                   *   

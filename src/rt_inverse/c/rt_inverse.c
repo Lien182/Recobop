@@ -1,3 +1,10 @@
+/********************************************************************          
+* main.c           -software implementation inverse thread function	*
+*                        				                            *
+*                                                                   *  
+* Author(s): Christoph Rueting, Christian Lienen                    *   
+*                                                                   *   
+********************************************************************/
 #include "recobop.h"
 
 #include "reconos_thread.h"
@@ -12,7 +19,7 @@
 
 #define DIRECTAXIACCESS 1
 #define DEBUG 0
-#define  DEBUG_LIGHT 1
+#define DEBUG_LIGHT 1
 
 // definitions of stewart platform
 

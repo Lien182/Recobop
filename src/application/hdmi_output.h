@@ -1,5 +1,5 @@
 /********************************************************************          
-* hdmi_input.c           -- hdmi userspace output driver            *
+* hdmi_input.h           -- hdmi userspace output driver            *
 *                                                                   *
 *                                                                   *  
 * Author(s):  Christian Lienen                                      *   
