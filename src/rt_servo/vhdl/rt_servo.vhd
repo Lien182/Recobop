@@ -1,10 +1,3 @@
---/********************************************************************          
---* rt_servo.vhd     -hardware implementation servo thread function	  *
---*                        				                              *
---*                                                                   *  
---* Author(s): Christoph Rueting, Christian Lienen                    *   
---*                                                                   *   
---********************************************************************/
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -49,7 +42,7 @@ architecture implementation of rt_servo is
 	signal o_memif : o_memif_t;
 
 	type STATE_TYPE is (STATE_THREAD_INIT,STATE_INIT_DATA,STATE_GET_SERVO_SINK, STATE_GET_DEMONSTRATOR_NR,
-	                    STATE_CMD,STATE_STORE);
+	                    STATE_CMD,STATE_STORE, STATE_CHECK_RC,STATE_SEND_RC_REQUEST, STATE_EXIT );
 	signal state : STATE_TYPE;
 
 	subtype C_ANGLE_RANGE is natural range 31 downto 21;
@@ -69,6 +62,8 @@ architecture implementation of rt_servo is
 	constant C_SRV5_CAL : integer := 66722;
 
 	signal srv_count : unsigned(21 downto 0) := (others => '0');
+
+	signal loop_cnt : unsigned(4 downto 0) :=(others => '0');
 
 	signal ignore, ret : std_logic_vector(31 downto 0);
 	
@@ -112,6 +107,8 @@ begin
 			srv3_a <= to_unsigned(900, 11);
 			srv4_a <= to_unsigned(900, 11);
 			srv5_a <= to_unsigned(900, 11);
+
+			loop_cnt <= (others => '0');
 			
 		elsif rising_edge(HWT_Clk) then
 			HWT_MBREAD <= '0';
@@ -165,12 +162,36 @@ begin
 						end if;
 					end if;
 				
-				when STATE_STORE =>
-									
+				when STATE_STORE =>									
 					memif_write_word(i_memif, o_memif, std_logic_vector(servo_base_addr(31 downto 5)) & cmd(C_LEG_RANGE) & "00", x"00000" & '0' & cmd(C_ANGLE_RANGE), done);
                     if done then
-                        state <= STATE_CMD;
+						if loop_cnt < to_unsigned(5,4) then
+							loop_cnt <= loop_cnt + 1;
+							state <= STATE_CMD;
+						else
+							loop_cnt <= (others => '0');
+                        	state <= STATE_CHECK_RC;
+						end if;
                     end if;
+
+				when STATE_CHECK_RC => 
+					memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 48), ret, done);
+                    if done then
+						if ret = x"00000001" then
+                           	state <= STATE_SEND_RC_REQUEST;
+						else
+							state <= STATE_CMD;
+						end if;
+                    end if;
+				
+				when STATE_SEND_RC_REQUEST => 
+					osif_mbox_put(i_osif, o_osif, std_logic_vector(RECONFIGURATION_2_REQUEST), x"00000001", ignore, done);
+					if done then
+						state <= STATE_EXIT;
+					end if;
+
+				when STATE_EXIT => 
+					osif_thread_exit (i_osif, o_osif);
 			end case;
 		end if;
 	end process osfsm_proc;
