@@ -14,7 +14,6 @@
 #include <arpa/inet.h> 
 #include <netinet/in.h> 
 
-// Driver code 
 int main(int argc, char **argv) 
 { 
     int sockfd; 
@@ -29,14 +28,14 @@ int main(int argc, char **argv)
         ip      = argv[1];
         port    = atoi(argv[2]);
 		request = atoi(argv[3]);
-		printf("[RECONFIG CLIENT] Set Request to %d \n", request);
+		printf("[RECONFIG CLIENT] Set Request for %d \n", request);
 	}
     else
     {
         printf("[RECONFIG CLIENT] Please choose a new filter for the demonstrator! \n");
         printf("[RECONFIG CLIENT] RECONF_REQUEST_RGB2GRAY  100\n");
         printf("[RECONFIG CLIENT] RECONF_REQUEST_SOBEL     200\n");
-        printf("[RECONFIG CLIENT] example: reconfig_client <ip> <port> <request>\n");
+        printf("[RECONFIG CLIENT] syntax: reconfig_client <ip> <port> <request>\n");
         exit(0);
     }
 
