@@ -54,7 +54,7 @@ architecture implementation of rt_touch is
 						STATE_WAIT_FOR_TRIGGER_WAIT_COND, STATE_WAIT_FOR_TRIGGER_UNLOCK_MUTEX, 
 	                    STATE_GET_TOUCH_SOURCE, STATE_READ_X_POS, STATE_CHECK_X_POS, 
 	                    STATE_READ_Y_POS, STATE_WAIT,
-	                    STATE_STORE_POS, STATE_STORE_DELTA);
+	                    STATE_STORE_POS, STATE_STORE_DELTA, STATE_CHECK_RC,STATE_SEND_RC_REQUEST, STATE_EXIT );
 	signal state : STATE_TYPE;
 
 
@@ -213,10 +213,28 @@ begin
                     if done then
 						x_pos_old <= x_pos_s;
 						y_pos_old <= y_pos_s;
-						state <= STATE_WAIT_FOR_TRIGGER_LOCK_MUTEX;
+						state <= STATE_CHECK_RC;
 						cnt <= (others => '0');
 					end if;
 
+				when STATE_CHECK_RC => 
+					memif_read_word(i_memif, o_memif, std_logic_vector(rb_info + 48), ret, done);
+                    if done then
+						if ret = x"00000001" then
+                           	state <= STATE_SEND_RC_REQUEST;
+						else
+							state <= STATE_WAIT_FOR_TRIGGER_LOCK_MUTEX;
+						end if;
+                    end if;
+				
+				when STATE_SEND_RC_REQUEST => 
+					osif_mbox_put(i_osif, o_osif, std_logic_vector(RECONFIGURATION_3_REQUEST), x"00000001", ignore, done);
+					if done then
+						state <= STATE_EXIT;
+					end if;
+
+				when STATE_EXIT => 
+					osif_thread_exit (i_osif, o_osif);
 
 				when others =>
 
